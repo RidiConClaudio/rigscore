@@ -19,7 +19,7 @@ const EN_PAIRS=[
 ["Processore","Processor"],["Scheda video","Graphics card"],["Memoria RAM","Memory (RAM)"],["Archiviazione","Storage"],["Sistema","System"],["Scheda madre","Motherboard"],["Schermo","Display"],["Rete","Network"],["Batteria","Battery"],
 ["Modello non leggibile dal browser: misurato col benchmark","Model not readable by the browser: measured with the benchmark"],["Modello non letto","Model not read"],
 ["thread logici","logical threads"],[" core / "," cores / "],[" GHz base"," GHz base"],["punti","points"],["dell'atteso","of expected"],["modello non in archivio, punteggio stimato","model not in database, estimated score"],["modello non in archivio","model not in database"],
-["dedicata per portatile","dedicated (laptop)"],["integrata","integrated"],["dedicata","dedicated"],["ray tracing sì","ray tracing: yes"],["ray tracing no","ray tracing: no"],["versione per portatile (stima)","laptop version (estimate)"],["anche: ","also: "],
+["dedicata per portatile","dedicated (laptop)"],["integrata","integrated"],["dedicata","dedicated"],["ray tracing sì","ray tracing: yes"],["ray tracing no","ray tracing: no"],["versione per portatile (stima)","laptop version (estimate)"],["stima dal nome del modello","estimated from the model name"],["stimata dal processore","estimated from the processor"],["anche: ","also: "],
 ["8 GB o più","8 GB or more"],["Da indicare","Not set"],["slot occupati","slots used"],
 ["Il browser non mostra oltre 8 GB: indica il valore in Scansione","The browser can't show more than 8 GB: enter the value in Scan"],
 ["Valore arrotondato dal browser. Tipo (DDR3/4/5), velocità e slot si leggono con la scansione completa.","Value rounded by the browser. Type (DDR3/4/5), speed and slots are read by the full scan."],
