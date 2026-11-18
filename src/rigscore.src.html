@@ -1,0 +1,1234 @@
+<title>RigScore</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banco prova strumentale. Barra in alto con schede, pannelli a griglia, letture numeriche in monospace. */
+:root{
+  --bg:#ECEEF1; --surface:#FFFFFF; --sunken:#F4F5F7; --ink:#141922; --muted:#5A6473; --line:#D6DBE2;
+  --accent:#D2561A; --accent-soft:#F8E3D7; --accent-ink:#FFFFFF;
+  --good:#1D7F49; --good-soft:#DDF1E5; --warn:#A86A0C; --warn-soft:#F7EBD3; --bad:#BF3328; --bad-soft:#F8DEDB; --info:#2961A6; --info-soft:#DCE8F6;
+  --f-display:"Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1217; --surface:#161B22; --sunken:#11161C; --ink:#E5E9EF; --muted:#93A0B1; --line:#29313C;
+    --accent:#FF7B3A; --accent-soft:#3A2418; --accent-ink:#1A0D05;
+    --good:#45C47E; --good-soft:#15301F; --warn:#E3AA4C; --warn-soft:#352812; --bad:#F2695B; --bad-soft:#3A1A17; --info:#6FA8EC; --info-soft:#16263A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1217; --surface:#161B22; --sunken:#11161C; --ink:#E5E9EF; --muted:#93A0B1; --line:#29313C;
+  --accent:#FF7B3A; --accent-soft:#3A2418; --accent-ink:#1A0D05;
+  --good:#45C47E; --good-soft:#15301F; --warn:#E3AA4C; --warn-soft:#352812; --bad:#F2695B; --bad-soft:#3A1A17; --info:#6FA8EC; --info-soft:#16263A;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:20px;letter-spacing:-.01em}
+.brand svg{flex:none}
+.brand small{font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.04em}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+nav.tabs button{font:500 14px var(--f-body);color:var(--muted);background:none;border:1px solid transparent;border-radius:8px;padding:7px 12px;cursor:pointer}
+nav.tabs button:hover{color:var(--ink);background:var(--sunken)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);background:var(--sunken);border-color:var(--line)}
+.prefs{display:flex;gap:6px}
+.prefs select{width:auto;padding:5px 8px;font-size:13px}
+nav.tabs button .n{font-family:var(--f-mono);font-size:11px;color:var(--accent);margin-left:6px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:24px 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+a{color:var(--info)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sec-head p{max-width:70ch}
+[role="tabpanel"]{display:flex;flex-direction:column;gap:20px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--f-body);padding:2px 9px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.info{background:var(--info-soft);color:var(--info)}
+.chip.neutral{background:var(--sunken);color:var(--muted);border-color:var(--line)}
+.chip.accent{background:var(--accent-soft);color:var(--accent)}
+
+/* buttons & inputs */
+.btn{font:600 14px var(--f-body);border-radius:8px;padding:9px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.sm{padding:5px 10px;font-size:13px}
+input[type="text"],input[type="number"],input[type="search"],select,textarea{font:14px var(--f-body);color:var(--ink);background:var(--sunken);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{font-family:var(--f-mono);font-size:12px;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted);font-weight:500}
+
+/* banner */
+.banner{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface)}
+.banner.warn{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:var(--warn-soft)}
+.banner p{flex:1 1 320px}
+
+/* overview */
+.hero{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.gauge{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.gauge svg{width:190px;height:190px;max-width:100%}
+.gauge .tier{font-family:var(--f-display);font-weight:800;font-size:20px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;width:100%}
+.fact{background:var(--sunken);border:1px solid var(--line);border-radius:8px;padding:8px 10px;text-align:left}
+.fact b{display:block;font-family:var(--f-mono);font-size:18px;font-weight:500}
+.comp{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:6px 16px;padding:14px 0;border-top:1px solid var(--line);align-items:start}
+.comp:first-child{border-top:0;padding-top:0}
+.comp .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.comp .v{font-weight:600;overflow-wrap:anywhere}
+.comp .d{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.comp .s{justify-self:end}
+@media (max-width:560px){.comp{grid-template-columns:1fr auto}.comp .k{grid-column:1/-1}}
+.meter{height:6px;border-radius:3px;background:var(--sunken);border:1px solid var(--line);overflow:hidden;margin-top:6px;max-width:420px}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.meter.good i{background:var(--good)} .meter.warn i{background:var(--warn)} .meter.bad i{background:var(--bad)}
+
+.list{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:6px minmax(0,1fr);gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .bar{border-radius:3px;background:var(--line)}
+.item.crit .bar{background:var(--bad)} .item.rec .bar{background:var(--warn)} .item.opt .bar{background:var(--info)} .item.ok .bar{background:var(--good)}
+.item .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.item .t{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item .t h3{font-size:15px}
+.item ul{margin:0;padding-left:18px}
+.cmd{display:flex;gap:8px;align-items:stretch;max-width:100%}
+.cmd code{flex:1;min-width:0;font-family:var(--f-mono);font-size:12.5px;background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:7px 10px;overflow-x:auto;white-space:pre}
+
+/* games */
+.gtools{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.gtools > *{flex:1 1 160px}
+.gtools .seg{flex:0 0 auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--sunken)}
+.seg button{font:500 13px var(--f-body);border:0;background:none;color:var(--muted);padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.games{display:flex;flex-direction:column}
+.game{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 120px;gap:6px 18px;padding:12px 0;border-top:1px solid var(--line);align-items:center}
+.game:first-child{border-top:0}
+.game .name{font-weight:600}
+.game .req{font-size:12px;color:var(--muted)}
+.game .pbar{display:flex;align-items:center;gap:10px}
+.game .pbar .meter{flex:1;margin:0;height:8px}
+.game .pct{font-family:var(--f-mono);font-size:15px;width:44px;text-align:right}
+.game .fps{text-align:right;font-family:var(--f-mono);font-size:13px}
+.game .fps b{font-size:16px;font-weight:500}
+.game .why{font-size:12px;color:var(--muted)}
+@media (max-width:700px){.game{grid-template-columns:1fr auto}.game .pbar{grid-column:1/-1;order:3}}
+
+/* upgrades */
+.offers{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.offer{border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.offer.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.offer .price{font-family:var(--f-mono);font-size:22px;font-weight:500}
+.offer .gain{font-family:var(--f-mono);font-size:13px}
+.offer .links{font-size:12px;margin-top:auto;display:flex;gap:10px;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono)}
+.verdict{border-left:4px solid var(--accent);padding:4px 0 4px 16px}
+.verdict p{max-width:75ch}
+
+/* scan */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+.step{display:flex;flex-direction:column;gap:10px}
+.step .num{font-family:var(--f-mono);font-size:12px;color:var(--accent);font-weight:500}
+kbd{font-family:var(--f-mono);font-size:12px;background:var(--sunken);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.note{font-size:12.5px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:14px;z-index:20}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.meter i{transition:width .5s ease}}
+</style>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="1.5" y="1.5" width="25" height="25" rx="6" fill="none" stroke="var(--accent)" stroke-width="2"/><path d="M6 18 L10 12 L14 15 L18 8 L22 11" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="11" r="2" fill="var(--accent)"/></svg>
+      <span>RigScore <small id="srcLabel">—</small></span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sezioni">
+      <button role="tab" id="t-over" aria-controls="p-over" aria-selected="true">Panoramica</button>
+      <button role="tab" id="t-games" aria-controls="p-games" aria-selected="false">Giochi <span class="n" id="nGames"></span></button>
+      <button role="tab" id="t-soft" aria-controls="p-soft" aria-selected="false">Ottimizza <span class="n" id="nSoft"></span></button>
+      <button role="tab" id="t-upg" aria-controls="p-upg" aria-selected="false">Upgrade</button>
+      <button role="tab" id="t-scan" aria-controls="p-scan" aria-selected="false">Scansione</button>
+    </nav>
+    <div class="prefs"><select id="langSel" aria-label="Lingua"><option value="it">Italiano</option><option value="en">English</option></select><select id="regSel" aria-label="Paese"></select></div>
+  </div>
+</header>
+
+<div class="wrap" id="waitBar" hidden><div class="banner warn" style="margin-top:16px"><p><b>Scansione in corso in PowerShell.</b> Se il browser chiede “Aprire RigScore?”, conferma. Alla fine RigScore si aggiorna con i risultati; se non succede, premi <kbd>Ctrl</kbd>+<kbd>V</kbd> qui.</p></div></div>
+<main class="wrap">
+  <section role="tabpanel" id="p-over" aria-labelledby="t-over"></section>
+  <section role="tabpanel" id="p-games" aria-labelledby="t-games" hidden></section>
+  <section role="tabpanel" id="p-soft" aria-labelledby="t-soft" hidden></section>
+  <section role="tabpanel" id="p-upg" aria-labelledby="t-upg" hidden></section>
+  <section role="tabpanel" id="p-scan" aria-labelledby="t-scan" hidden></section>
+</main>
+
+<script type="text/plain" id="ps-src">%%PS%%</script>
+<script type="text/plain" id="inst-src">%%INST%%</script>
+<script>
+"use strict";
+/* ============ DATI: GPU ============ */
+/* nome|punteggio (indice simile al 3DMark Time Spy Graphics)|VRAM GB|ray tracing|TDP W|tipo d=dedicata l=portatile i=integrata */
+const GPU_RAW = `RTX 5090|48000|32|1|575|d
+RTX 5080|32500|16|1|360|d
+RTX 5070 Ti|27500|16|1|300|d
+RTX 5070|22500|12|1|250|d
+RTX 5060 Ti|15800|16|1|180|d
+RTX 5060|12800|8|1|145|d
+RTX 5050|10000|8|1|130|d
+RTX 4090|36000|24|1|450|d
+RTX 4080 Super|28500|16|1|320|d
+RTX 4080|28000|16|1|320|d
+RTX 4070 Ti Super|24000|16|1|285|d
+RTX 4070 Ti|22700|12|1|285|d
+RTX 4070 Super|21000|12|1|220|d
+RTX 4070|17800|12|1|200|d
+RTX 4060 Ti|13500|8|1|165|d
+RTX 4060|10600|8|1|115|d
+RTX 3090 Ti|21500|24|1|450|d
+RTX 3090|19500|24|1|350|d
+RTX 3080 Ti|19000|12|1|350|d
+RTX 3080|17500|10|1|320|d
+RTX 3070 Ti|14800|8|1|290|d
+RTX 3070|13600|8|1|220|d
+RTX 3060 Ti|11800|8|1|200|d
+RTX 3060|8800|12|1|170|d
+RTX 3050|6200|8|1|130|d
+RTX 2080 Ti|14500|11|1|250|d
+RTX 2080 Super|11800|8|1|250|d
+RTX 2080|11000|8|1|215|d
+RTX 2070 Super|10300|8|1|215|d
+RTX 2070|9100|8|1|175|d
+RTX 2060 Super|8800|8|1|175|d
+RTX 2060|7600|6|1|160|d
+GTX 1660 Ti|6300|6|0|120|d
+GTX 1660 Super|6200|6|0|125|d
+GTX 1660|5500|6|0|120|d
+GTX 1650 Super|5000|4|0|100|d
+GTX 1650|3600|4|0|75|d
+GTX 1630|2400|4|0|75|d
+GTX 1080 Ti|9800|11|0|250|d
+GTX 1080|7500|8|0|180|d
+GTX 1070 Ti|6800|8|0|180|d
+GTX 1070|6000|8|0|150|d
+GTX 1060 6GB|4200|6|0|120|d
+GTX 1060 3GB|3900|3|0|120|d
+GTX 1060|4200|6|0|120|d
+GTX 1050 Ti|2500|4|0|75|d
+GTX 1050|1900|2|0|75|d
+GT 1030|1100|2|0|30|d
+GTX 980 Ti|5400|6|0|250|d
+GTX 980|4100|4|0|165|d
+GTX 970|3400|4|0|145|d
+GTX 960|2200|2|0|120|d
+GTX 950|1800|2|0|90|d
+GTX 780 Ti|2800|3|0|250|d
+GTX 780|2500|3|0|250|d
+GTX 770|1900|2|0|230|d
+GTX 760|1600|2|0|170|d
+GTX 750 Ti|1300|2|0|60|d
+GTX 750|1100|1|0|55|d
+GTX 680|1800|2|0|195|d
+GTX 670|1600|2|0|170|d
+GTX 660 Ti|1350|2|0|150|d
+GTX 660|1200|2|0|140|d
+GTX 650|650|1|0|65|d
+GT 730|350|2|0|38|d
+GT 710|200|1|0|19|d
+RTX 5090 Laptop|22500|24|1|150|l
+RTX 5080 Laptop|19500|16|1|150|l
+RTX 5070 Ti Laptop|15500|12|1|140|l
+RTX 5070 Laptop|12000|8|1|115|l
+RTX 5060 Laptop|11500|8|1|115|l
+RTX 5050 Laptop|9500|8|1|100|l
+RTX 4090 Laptop|20500|16|1|150|l
+RTX 4080 Laptop|18000|12|1|150|l
+RTX 4070 Laptop|12000|8|1|115|l
+RTX 4060 Laptop|10500|8|1|115|l
+RTX 4050 Laptop|8600|6|1|100|l
+RTX 3080 Ti Laptop|13000|16|1|150|l
+RTX 3080 Laptop|12000|8|1|150|l
+RTX 3070 Ti Laptop|11000|8|1|125|l
+RTX 3070 Laptop|10200|8|1|125|l
+RTX 3060 Laptop|8500|6|1|115|l
+RTX 3050 Ti Laptop|5400|4|1|80|l
+RTX 3050 Laptop|5000|4|1|80|l
+RTX 2050|3800|4|1|45|l
+GTX 1650 Ti|3700|4|0|55|l
+GTX 980M|3300|4|0|100|l
+GTX 970M|2600|3|0|80|l
+GTX 965M|1900|2|0|60|l
+GTX 960M|1700|2|0|60|l
+GTX 950M|1450|2|0|50|l
+GTX 880M|1900|4|0|105|l
+GTX 870M|1700|3|0|100|l
+GTX 860M|1500|2|0|45|l
+GTX 850M|1300|2|0|45|l
+GTX 780M|2100|4|0|100|l
+GTX 770M|1700|3|0|75|l
+GTX 765M|1300|2|0|65|l
+GT 755M|850|2|0|50|l
+GT 750M|800|2|0|33|l
+GT 745M|700|2|0|33|l
+GT 740M|650|2|0|33|l
+GT 730M|550|2|0|33|l
+GT 720M|350|2|0|33|l
+940MX|1100|2|0|23|l
+940M|1000|2|0|33|l
+930MX|800|2|0|17|l
+930M|800|2|0|33|l
+920MX|700|2|0|16|l
+MX570|4000|2|0|25|l
+MX550|2900|2|0|25|l
+MX450|2700|2|0|25|l
+MX350|1700|2|0|20|l
+MX330|1600|2|0|20|l
+MX250|1500|2|0|25|l
+MX230|1100|2|0|10|l
+MX150|1450|2|0|25|l
+MX130|1000|2|0|30|l
+MX110|800|2|0|30|l
+RX 9070 XT|29000|16|1|304|d
+RX 9070|25500|16|1|220|d
+RX 9060 XT|15000|16|1|160|d
+RX 7900 XTX|30000|24|1|355|d
+RX 7900 XT|26500|20|1|315|d
+RX 7900 GRE|22000|16|1|260|d
+RX 7800 XT|19800|16|1|263|d
+RX 7700 XT|17000|12|1|245|d
+RX 7600 XT|11000|16|1|190|d
+RX 7600|10800|8|1|165|d
+RX 6950 XT|22000|16|1|335|d
+RX 6900 XT|20500|16|1|300|d
+RX 6800 XT|19500|16|1|300|d
+RX 6800|16500|16|1|250|d
+RX 6750 XT|14000|12|1|250|d
+RX 6700 XT|12600|12|1|230|d
+RX 6700|11500|10|1|175|d
+RX 6650 XT|10500|8|1|180|d
+RX 6600 XT|10000|8|1|160|d
+RX 6600|8600|8|1|132|d
+RX 6500 XT|5000|4|1|107|d
+RX 6400|4000|4|1|53|d
+RX 5700 XT|9000|8|0|225|d
+RX 5700|8200|8|0|180|d
+RX 5600 XT|7500|6|0|150|d
+RX 5500 XT|5000|8|0|130|d
+RX 590|4800|8|0|225|d
+RX 580|4400|8|0|185|d
+RX 570|3900|4|0|150|d
+RX 560|2300|4|0|80|d
+RX 550|1300|2|0|50|d
+RX 480|4200|8|0|150|d
+RX 470|3700|4|0|120|d
+RX Vega 64|7200|8|0|295|d
+RX Vega 56|6400|8|0|210|d
+R9 390|3700|8|0|275|d
+R9 290|3300|4|0|250|d
+R9 380|2700|4|0|190|d
+R7 370|1700|2|0|110|d
+RX 7600M XT|10500|8|1|120|l
+RX 6800M|11500|12|1|145|l
+RX 6700M|9500|10|1|135|l
+RX 6600M|8500|8|1|100|l
+RX 6500M|4800|4|1|50|l
+Radeon 8060S|10500|0|1|0|i
+Radeon 8050S|9000|0|1|0|i
+Radeon 890M|3900|0|1|0|i
+Radeon 880M|3500|0|1|0|i
+Radeon 780M|3000|0|1|0|i
+Radeon 760M|2500|0|1|0|i
+Radeon 740M|1600|0|1|0|i
+Radeon 680M|2500|0|1|0|i
+Radeon 660M|1700|0|1|0|i
+Radeon 610M|600|0|0|0|i
+Radeon Vega 11|1200|0|0|0|i
+Radeon Vega 8|1000|0|0|0|i
+Radeon Vega 7|950|0|0|0|i
+Radeon Vega 6|800|0|0|0|i
+Radeon Vega 3|450|0|0|0|i
+Radeon Graphics|1100|0|0|0|i
+Arc B580|14500|12|1|190|d
+Arc B570|12500|10|1|150|d
+Arc A770|13500|16|1|225|d
+Arc A750|12500|8|1|225|d
+Arc A580|10500|8|1|185|d
+Arc A380|4300|6|1|75|d
+Arc A310|3000|4|1|75|d
+Arc 140V|3900|0|1|0|i
+Arc 130V|3400|0|1|0|i
+Arc 140T|4000|0|1|0|i
+Arc Graphics|3300|0|1|0|i
+Iris Xe|1500|0|0|0|i
+Iris Plus|900|0|0|0|i
+Iris Pro|500|0|0|0|i
+UHD Graphics 770|750|0|0|0|i
+UHD Graphics 750|650|0|0|0|i
+UHD Graphics 730|600|0|0|0|i
+UHD Graphics 630|450|0|0|0|i
+UHD Graphics 620|420|0|0|0|i
+UHD Graphics 600|180|0|0|0|i
+UHD Graphics|450|0|0|0|i
+HD Graphics 630|420|0|0|0|i
+HD Graphics 620|400|0|0|0|i
+HD Graphics 530|380|0|0|0|i
+HD Graphics 520|330|0|0|0|i
+HD Graphics 5500|280|0|0|0|i
+HD Graphics 4600|330|0|0|0|i
+HD Graphics 4400|280|0|0|0|i
+HD Graphics 4000|200|0|0|0|i
+HD Graphics 3000|90|0|0|0|i
+HD Graphics|150|0|0|0|i`;
+
+function norm(s){
+  return String(s||"").toLowerCase()
+    .replace(/\((r|tm|c)\)|®|™/g," ")
+    .replace(/\(0x[0-9a-f]+\)/g," ")
+    .replace(/\b(nvidia|geforce|amd|ati|intel|corporation|gpu|series)\b/g," ")
+    .replace(/[^a-z0-9+ ]/g," ")
+    .replace(/([a-z])(\d)/g,"$1 $2")
+    .replace(/\s+/g," ").trim();
+}
+const GPUS = GPU_RAW.split("\n").map(l=>{const [n,s,v,rt,w,k]=l.split("|");return {n,key:norm(n),s:+s,vram:+v,rt:rt==="1",w:+w,kind:k};});
+GPUS.sort((a,b)=>b.key.length-a.key.length);
+const escRe = s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+GPUS.forEach(g=>g.re=new RegExp("(^| )"+escRe(g.key)+"( |$)"));
+function findGPU(name){ const n=norm(name); if(!n) return null; return GPUS.find(g=>g.re.test(n))||null; }
+function gpuRef(name){ const g=findGPU(name); return g?g.s:3000; }
+
+function gpuInfo(name, isLaptop){
+  const g=findGPU(name);
+  if(!g) return {name, s:null, known:false, kind:/intel|uhd|hd graphics|radeon\(tm\) graphics|vega/i.test(name)?"i":"d", rt:false, vram:0};
+  let s=g.s, note="";
+  if(isLaptop && g.kind==="d" && !/laptop|max-q|mobile/i.test(name)){ s=Math.round(s*0.82); note="versione per portatile (stima)"; }
+  return {name, s, known:true, kind:isLaptop&&g.kind==="d"?"l":g.kind, rt:g.rt, vram:g.vram, w:g.w, ref:g.n, note};
+}
+
+/* ============ DATI: CPU (stima euristica) ============ */
+function cpuInfo(raw){
+  const n=String(raw||"").toLowerCase().replace(/\((r|tm)\)|®|™/g,"").replace(/cpu|processor|with radeon graphics|\d+-core/g," ").replace(/\s+/g," ").trim();
+  let s=null, plat=null, mobile=false, vendor=null, gen=null, x3d=false, m;
+  if((m=n.match(/core ultra ([3579]) (\d)(\d{2})([a-z]*)/))){
+    vendor="intel"; const ser=+m[2], suf=m[4]; const t={3:-8,5:0,7:3,9:5}[m[1]];
+    if(ser===2){
+      if(/hx/.test(suf)){s=78;mobile=true}
+      else if(/v/.test(suf)){s=68;mobile=true}
+      else if(/[hu]/.test(suf)){s=suf.includes("u")?62:72;mobile=true}
+      else {s=80;plat="LGA1851"}
+    } else { s=suf.includes("u")?58:66; mobile=true }
+    s+=t; gen=ser===2?15:14;
+  } else if((m=n.match(/i([3579])[- ](\d{4,5})([a-z0-9]*)/))){
+    vendor="intel"; const num=m[2]; gen=num.length===5?+num.slice(0,2):+num[0]; const suf=m[3];
+    const base={1:20,2:24,3:27,4:31,5:32,6:38,7:41,8:47,9:50,10:53,11:60,12:70,13:77,14:79}[gen]??30;
+    const t={3:-9,5:0,7:5,9:8}[m[1]]; let adj=0;
+    if(/^hx/.test(suf)){adj=-1;mobile=true}
+    else if(/^(h|hk|hs|hq|mq|mx|xm|qm)/.test(suf)){adj=-6;mobile=true}
+    else if(/^(u|y|g\d|m$|p)/.test(suf)){adj=suf[0]==="y"?-20:suf[0]==="p"?-9:-14;mobile=true}
+    else if(/k/.test(suf)) adj=2;
+    else if(/^t/.test(suf)) adj=-4;
+    s=base+t+adj;
+    if(!mobile) plat = gen<=3?"LGA1155":gen<=5?"LGA1150":gen<=7?"LGA1151":gen<=9?"LGA1151v2":gen===10?"LGA1200":gen===11?"LGA1200":"LGA1700";
+  } else if((m=n.match(/core ([357]) (\d)(\d{2})([a-z]*)/))){
+    vendor="intel"; mobile=true; s=(m[4].includes("u")?58:68)+({3:-8,5:0,7:3}[m[1]]); gen=13;
+  } else if((m=n.match(/ryzen ai (?:max\+? )?(?:pro )?([3579]) (?:hx |pro )?(\d{3})/))){
+    vendor="amd"; mobile=true; s=78+({3:-8,5:-3,7:0,9:3}[m[1]]); gen=9;
+  } else if((m=n.match(/ryzen ([3579])(?: pro)? (\d)(\d)(\d)(\d)([a-z0-9]*)/))){
+    vendor="amd"; const ser=+m[2], arch=+m[4], suf=m[6]; const t={3:-9,5:0,7:4,9:6}[m[1]]; gen=ser;
+    if(!/^(u|h|hs|hx)/.test(suf)){
+      s=({1:30,2:34,3:45,4:44,5:64,7:79,8:72,9:85}[ser]??40)+t;
+      if(/x3d/.test(suf)){s+=15;x3d=true} else if(/x/.test(suf)) s+=2;
+      if(/g/.test(suf)&&ser===5) s-=5;
+      plat=ser<=5?"AM4":"AM5";
+    } else {
+      mobile=true; let base;
+      if(ser>=7) base={1:30,2:42,3:56,4:72,5:78}[arch]??60; else base={2:30,3:38,4:46,5:56,6:62}[ser]??40;
+      if(/hx/.test(suf)) base+=3; else if(/u/.test(suf)) base-=8;
+      s=base+t;
+    }
+  } else if(/threadripper/.test(n)){vendor="amd";s=70}
+  else if(/\bfx[- ]?\d/.test(n)){vendor="amd";s=22;plat="AM3+"}
+  else if(/athlon/.test(n)){vendor="amd";s=26}
+  else if(/xeon/.test(n)){vendor="intel";s=38}
+  else if(/\bn(50|97|100|150|200|300|305)\b/.test(n)){vendor="intel";s=30;mobile=true}
+  else if(/pentium|celeron/.test(n)){vendor="intel";s=/gold|g7\d{3}|g6\d{3}/.test(n)?40:20}
+  else if(/core\s?2|phenom|athlon ii/.test(n)){s=14}
+  return {name:raw, s:s==null?null:Math.max(5,Math.min(100,s)), known:s!=null, plat, mobile, vendor, gen, x3d};
+}
+const cpuRef = name => cpuInfo(name).s || 40;
+
+/* ============ DATI: GIOCHI ============ */
+/* gmin/grec GPU, cmin/crec CPU, rmin/rrec RAM GB, gb spazio, ssd richiesto, vram GB consigliata, rt obbligatorio, sb Secure Boot/TPM richiesto, fps di riferimento ai requisiti consigliati */
+const GAMES=[
+ {n:"Cyberpunk 2077",y:2020,gmin:"GTX 1060 6GB",grec:"RTX 2060 Super",cmin:"i7-6700",crec:"i7-12700",rmin:12,rrec:16,gb:70,ssd:1,vram:8,fps:60},
+ {n:"Elden Ring Nightreign",y:2025,gmin:"GTX 1060 3GB",grec:"GTX 1070",cmin:"i5-8400",crec:"i7-8700K",rmin:12,rrec:16,gb:30,fps:60},
+ {n:"Elden Ring",y:2022,gmin:"GTX 1060 3GB",grec:"GTX 1070",cmin:"i5-8400",crec:"i7-8700K",rmin:12,rrec:16,gb:60,fps:60},
+ {n:"Baldur's Gate 3",y:2023,gmin:"GTX 970",grec:"RTX 2060 Super",cmin:"i5-4690",crec:"i7-8700K",rmin:8,rrec:16,gb:150,ssd:1,vram:8,fps:60},
+ {n:"Counter-Strike 2",y:2023,gmin:"GTX 1050",grec:"GTX 1660 Super",cmin:"i5-4460",crec:"i7-8700",rmin:8,rrec:16,gb:85,fps:144,esport:1},
+ {n:"Valorant",y:2020,gmin:"HD Graphics 4600",grec:"GTX 1050 Ti",cmin:"i3-4130",crec:"i5-9400F",rmin:4,rrec:8,gb:35,fps:144,esport:1,note:"Su Windows 11 l'anti-cheat Vanguard richiede TPM 2.0 e Secure Boot."},
+ {n:"Fortnite",y:2017,gmin:"HD Graphics 4600",grec:"GTX 960",cmin:"i3-3225",crec:"i5-7400",rmin:8,rrec:16,gb:40,fps:90,esport:1},
+ {n:"Minecraft (Java)",y:2011,gmin:"HD Graphics 4600",grec:"GTX 750 Ti",cmin:"i3-3210",crec:"i5-4690",rmin:4,rrec:8,gb:4,fps:120},
+ {n:"Roblox",y:2006,gmin:"HD Graphics 4000",grec:"GTX 750 Ti",cmin:"i3-3210",crec:"i5-4460",rmin:4,rrec:8,gb:2,fps:120},
+ {n:"League of Legends",y:2009,gmin:"HD Graphics 4600",grec:"GTX 960",cmin:"i3-4130",crec:"i5-4460",rmin:4,rrec:8,gb:16,fps:144,esport:1},
+ {n:"Dota 2",y:2013,gmin:"HD Graphics 4600",grec:"GTX 1050 Ti",cmin:"i3-4130",crec:"i5-7400",rmin:4,rrec:8,gb:60,fps:120,esport:1},
+ {n:"Rocket League",y:2015,gmin:"GTX 750 Ti",grec:"GTX 1060",cmin:"i3-4130",crec:"i5-4690",rmin:4,rrec:8,gb:20,fps:144,esport:1},
+ {n:"Apex Legends",y:2019,gmin:"GT 1030",grec:"GTX 970",cmin:"i3-6300",crec:"i5-3570K",rmin:6,rrec:8,gb:75,fps:90},
+ {n:"Marvel Rivals",y:2024,gmin:"GTX 1060",grec:"RTX 2060 Super",cmin:"i5-6600K",crec:"i5-10400",rmin:16,rrec:16,gb:70,ssd:1,fps:60},
+ {n:"Call of Duty: Black Ops 6 / Warzone",y:2024,gmin:"GTX 960",grec:"GTX 1080 Ti",cmin:"i5-6600",crec:"i7-6700K",rmin:8,rrec:12,gb:150,ssd:1,fps:60,sb:1,note:"I Call of Duty più recenti richiedono TPM 2.0 e Secure Boot attivi."},
+ {n:"Battlefield 6",y:2025,gmin:"RTX 2060",grec:"RTX 3060 Ti",cmin:"i5-8400",crec:"i7-10700",rmin:16,rrec:16,gb:80,ssd:1,vram:8,fps:60,sb:1,note:"Richiede Secure Boot attivo (anti-cheat Javelin)."},
+ {n:"EA Sports FC 26",y:2025,gmin:"GTX 1050 Ti",grec:"GTX 1660",cmin:"i5-6600K",crec:"i7-6700",rmin:8,rrec:12,gb:100,fps:60},
+ {n:"GTA V",y:2015,gmin:"GTX 750 Ti",grec:"GTX 1060 3GB",cmin:"i5-3470",crec:"i5-4690",rmin:8,rrec:8,gb:110,fps:60},
+ {n:"Red Dead Redemption 2",y:2019,gmin:"GTX 960",grec:"GTX 1060 6GB",cmin:"i5-2500K",crec:"i7-4770K",rmin:8,rrec:12,gb:150,fps:60},
+ {n:"The Witcher 3 (next-gen)",y:2022,gmin:"GTX 970",grec:"RTX 2060",cmin:"i5-2500K",crec:"i7-7700K",rmin:8,rrec:16,gb:50,fps:60},
+ {n:"Hogwarts Legacy",y:2023,gmin:"GTX 960",grec:"GTX 1080 Ti",cmin:"i5-6600",crec:"i7-8700",rmin:16,rrec:16,gb:85,ssd:1,vram:8,fps:60},
+ {n:"Starfield",y:2023,gmin:"GTX 1070 Ti",grec:"RTX 2080",cmin:"i7-6800K",crec:"i5-10600K",rmin:16,rrec:16,gb:125,ssd:1,vram:8,fps:60},
+ {n:"Alan Wake 2",y:2023,gmin:"RTX 2060",grec:"RTX 3070",cmin:"i5-7600K",crec:"Ryzen 7 3700X",rmin:16,rrec:16,gb:90,ssd:1,vram:8,fps:60},
+ {n:"Black Myth: Wukong",y:2024,gmin:"GTX 1060 6GB",grec:"RTX 2060",cmin:"i5-8400",crec:"i7-9700",rmin:16,rrec:16,gb:130,ssd:1,fps:60},
+ {n:"Helldivers 2",y:2024,gmin:"GTX 1050 Ti",grec:"RTX 2060",cmin:"i7-4790K",crec:"i7-9700K",rmin:8,rrec:16,gb:100,ssd:1,fps:60},
+ {n:"Monster Hunter Wilds",y:2025,gmin:"GTX 1660 Super",grec:"RTX 2070 Super",cmin:"i5-10400",crec:"i5-11600K",rmin:16,rrec:16,gb:140,ssd:1,vram:8,fps:60},
+ {n:"Forza Horizon 5",y:2021,gmin:"GTX 970",grec:"GTX 1070",cmin:"i5-4460",crec:"i5-8400",rmin:8,rrec:16,gb:110,fps:60},
+ {n:"Ghost of Tsushima",y:2024,gmin:"GTX 960",grec:"RTX 2060",cmin:"i3-7100",crec:"i5-8600",rmin:8,rrec:16,gb:75,ssd:1,fps:60},
+ {n:"Kingdom Come: Deliverance II",y:2025,gmin:"GTX 1060 6GB",grec:"RTX 2060 Super",cmin:"i5-8400",crec:"i7-8700",rmin:16,rrec:16,gb:100,ssd:1,fps:60},
+ {n:"Clair Obscur: Expedition 33",y:2025,gmin:"GTX 1060 6GB",grec:"RTX 3060 Ti",cmin:"i7-8700K",crec:"i7-12700K",rmin:8,rrec:16,gb:55,ssd:1,fps:60},
+ {n:"Assassin's Creed Shadows",y:2025,gmin:"GTX 1070",grec:"RTX 2080 Super",cmin:"i7-8700K",crec:"i7-10700K",rmin:16,rrec:16,gb:115,ssd:1,vram:8,fps:60},
+ {n:"Doom: The Dark Ages",y:2025,gmin:"RTX 2060 Super",grec:"RTX 3080",cmin:"i7-10700K",crec:"i7-12700K",rmin:16,rrec:32,gb:100,ssd:1,vram:8,rt:1,fps:60},
+ {n:"Indiana Jones e l'Antico Cerchio",y:2024,gmin:"RTX 2060 Super",grec:"RTX 3080 Ti",cmin:"i7-10700K",crec:"i7-12700K",rmin:16,rrec:32,gb:120,ssd:1,vram:8,rt:1,fps:60},
+ {n:"Path of Exile 2",y:2024,gmin:"GTX 960",grec:"RTX 2060",cmin:"i7-4790",crec:"i5-10400",rmin:8,rrec:16,gb:100,ssd:1,fps:60},
+ {n:"Cities: Skylines II",y:2023,gmin:"GTX 970",grec:"RTX 2080 Super",cmin:"i7-6700K",crec:"i5-12600K",rmin:8,rrec:16,gb:60,ssd:1,fps:45},
+ {n:"Microsoft Flight Simulator 2024",y:2024,gmin:"GTX 970",grec:"RTX 2080",cmin:"i7-6800K",crec:"i7-10700K",rmin:16,rrec:32,gb:50,ssd:1,vram:8,fps:45},
+ {n:"The Sims 4",y:2014,gmin:"HD Graphics 4600",grec:"GTX 750 Ti",cmin:"i3-3220",crec:"i5-4460",rmin:4,rrec:8,gb:26,fps:60},
+ {n:"Hollow Knight: Silksong",y:2025,gmin:"HD Graphics 4600",grec:"GTX 1050",cmin:"i3-3220",crec:"i5-4460",rmin:4,rrec:8,gb:8,fps:60},
+ {n:"Stardew Valley",y:2016,gmin:"HD Graphics 4000",grec:"HD Graphics 4600",cmin:"i3-3210",crec:"i3-4130",rmin:2,rrec:4,gb:1,fps:60},
+ {n:"Genshin Impact",y:2020,gmin:"GT 1030",grec:"GTX 1060 6GB",cmin:"i5-4460",crec:"i7-4790",rmin:8,rrec:16,gb:100,fps:60}
+];
+GAMES.forEach(g=>{g.gMin=gpuRef(g.gmin);g.gRec=gpuRef(g.grec);g.cMin=cpuRef(g.cmin);g.cRec=cpuRef(g.crec);});
+
+/* ============ DATI: ACQUISTI (stime metà 2026, euro) ============ */
+const PRICE_NOTE="Prezzi indicativi (stime di metà 2026). RAM e SSD sono rincarati molto tra fine 2025 e 2026: controlla sempre il prezzo del giorno con i link.";
+const GPU_BUY=[
+ {n:"AMD RX 6600 8 GB (usata)",g:"RX 6600",p:150,psu:450,used:1,note:"La scelta più economica per giocare in 1080p."},
+ {n:"NVIDIA RTX 3060 12 GB (usata)",g:"RTX 3060",p:190,psu:550,used:1,note:"12 GB di VRAM, DLSS. Buona da usata."},
+ {n:"Intel Arc B580 12 GB",g:"Arc B580",p:280,psu:550,rebar:1,note:"Ottimo rapporto prezzo/prestazioni. Serve Resizable BAR attivo."},
+ {n:"NVIDIA RTX 5060 8 GB",g:"RTX 5060",p:300,psu:500,note:"DLSS 4 e frame generation. 8 GB di VRAM stanno stretti nei giochi pesanti."},
+ {n:"AMD RX 9060 XT 16 GB",g:"RX 9060 XT",p:370,psu:500,note:"16 GB di VRAM: la scelta più longeva in fascia media."},
+ {n:"NVIDIA RTX 5060 Ti 16 GB",g:"RTX 5060 Ti",p:450,psu:550},
+ {n:"NVIDIA RTX 5070 12 GB",g:"RTX 5070",p:580,psu:650},
+ {n:"AMD RX 9070 16 GB",g:"RX 9070",p:600,psu:650,note:"Ottima per il 1440p."},
+ {n:"AMD RX 9070 XT 16 GB",g:"RX 9070 XT",p:690,psu:750},
+ {n:"NVIDIA RTX 5070 Ti 16 GB",g:"RTX 5070 Ti",p:850,psu:750},
+ {n:"NVIDIA RTX 5080 16 GB",g:"RTX 5080",p:1150,psu:850}
+];
+const CPU_BUY={
+ "LGA1155":{label:"Intel LGA1155 (2ª–3ª gen, 2011–2013)",ram:"DDR3",cpus:[{n:"Core i7-3770 (usato)",c:"i7-3770",p:25}],note:"Piattaforma di oltre 10 anni: conviene solo un ritocco a costo quasi zero."},
+ "LGA1150":{label:"Intel LGA1150 (4ª gen, 2013–2014)",ram:"DDR3",cpus:[{n:"Core i7-4790 (usato)",c:"i7-4790",p:35}],note:"Piattaforma molto vecchia: il salto vero richiede scheda madre e RAM nuove."},
+ "LGA1151":{label:"Intel LGA1151 (6ª–7ª gen)",ram:"DDR4",cpus:[{n:"Core i7-7700 (usato)",c:"i7-7700",p:60}],note:"Le schede 100/200 non accettano le CPU di 8ª–9ª gen."},
+ "LGA1151v2":{label:"Intel LGA1151 (8ª–9ª gen)",ram:"DDR4",cpus:[{n:"Core i7-9700 (usato)",c:"i7-9700",p:90},{n:"Core i9-9900 (usato)",c:"i9-9900",p:130}]},
+ "LGA1200":{label:"Intel LGA1200 (10ª–11ª gen)",ram:"DDR4",cpus:[{n:"Core i5-11400F",c:"i5-11400F",p:110},{n:"Core i7-11700F",c:"i7-11700F",p:170}],note:"Le schede B460/H410 non supportano l'11ª gen: lì scegli un i7-10700F (circa 150 €)."},
+ "LGA1700":{label:"Intel LGA1700 (12ª–14ª gen)",ram:"DDR4/DDR5",cpus:[{n:"Core i5-13400F",c:"i5-13400F",p:150},{n:"Core i5-14600KF",c:"i5-14600KF",p:210},{n:"Core i7-14700KF",c:"i7-14700KF",p:320}],note:"Per 13ª/14ª gen aggiorna prima il BIOS (microcodice 0x12B o successivo)."},
+ "LGA1851":{label:"Intel LGA1851 (Core Ultra 200)",ram:"DDR5",cpus:[{n:"Core Ultra 7 265K",c:"Core Ultra 7 265K",p:280}]},
+ "AM4":{label:"AMD AM4 (Ryzen 1000–5000)",ram:"DDR4",cpus:[{n:"Ryzen 5 5600",c:"Ryzen 5 5600",p:95},{n:"Ryzen 7 5700X",c:"Ryzen 7 5700X",p:130},{n:"Ryzen 7 5700X3D",c:"Ryzen 7 5700X3D",p:210}],note:"Prima del cambio aggiorna il BIOS. Sulle schede A320/B350/X370 verifica che il produttore supporti i Ryzen 5000."},
+ "AM5":{label:"AMD AM5 (Ryzen 7000–9000)",ram:"DDR5",cpus:[{n:"Ryzen 5 9600X",c:"Ryzen 5 9600X",p:200},{n:"Ryzen 7 7800X3D",c:"Ryzen 7 7800X3D",p:350},{n:"Ryzen 7 9800X3D",c:"Ryzen 7 9800X3D",p:460}]},
+ "AM3+":{label:"AMD AM3+ (FX)",ram:"DDR3",cpus:[],note:"Nessun upgrade sensato: serve una piattaforma nuova."}
+};
+const BUNDLES=[
+ {n:"AMD AM4 con la tua DDR4",parts:"Ryzen 5 5600 + scheda madre B550 (riusi la RAM DDR4)",c:"Ryzen 5 5600",p:190,ddr4:1},
+ {n:"Intel con la tua DDR4",parts:"Core i5-13400F + scheda madre B760 DDR4 (riusi la RAM DDR4)",c:"i5-13400F",p:260,ddr4:1},
+ {n:"AM5 essenziale",parts:"Ryzen 5 7600 + scheda madre B650 + 32 GB DDR5-6000",c:"Ryzen 5 7600",p:560},
+ {n:"AM5 gaming",parts:"Ryzen 7 7800X3D + scheda madre B650 + 32 GB DDR5-6000",c:"Ryzen 7 7800X3D",p:740},
+ {n:"AM5 top",parts:"Ryzen 7 9800X3D + scheda madre B850 + 32 GB DDR5-6000",c:"Ryzen 7 9800X3D",p:880}
+];
+const BUILDS=[
+ {n:"PC fisso 1080p",parts:"Ryzen 5 7600 · RX 9060 XT 16 GB · 32 GB DDR5 · SSD NVMe 1 TB · 650 W · case",c:"Ryzen 5 7600",g:"RX 9060 XT",p:950},
+ {n:"PC fisso 1440p",parts:"Ryzen 7 7800X3D · RX 9070 16 GB · 32 GB DDR5 · SSD NVMe 2 TB · 750 W",c:"Ryzen 7 7800X3D",g:"RX 9070",p:1450},
+ {n:"PC fisso 4K / alto refresh",parts:"Ryzen 7 9800X3D · RTX 5070 Ti 16 GB · 32 GB DDR5 · SSD NVMe 2 TB · 850 W",c:"Ryzen 7 9800X3D",g:"RTX 5070 Ti",p:2000}
+];
+const LAPTOPS=[
+ {n:"Portatile gaming base",parts:"Ryzen 7 / Core i7 recente · RTX 5050 Laptop · 16 GB · SSD 1 TB",c:"Ryzen 7 8845HS",g:"RTX 5050 Laptop",p:900},
+ {n:"Portatile gaming medio",parts:"Core Ultra 7 / Ryzen 7 · RTX 5060 Laptop · 16–32 GB · SSD 1 TB",c:"Core Ultra 7 255HX",g:"RTX 5060 Laptop",p:1200},
+ {n:"Portatile gaming alto",parts:"Ryzen 9 / Core Ultra 9 · RTX 5070 Ti Laptop · 32 GB · SSD 2 TB",c:"Ryzen 9 8945HX",g:"RTX 5070 Ti Laptop",p:1900}
+];
+const RAM_BUY={DDR3:{k16:{n:"2 × 8 GB DDR3 (usata)",p:30}},DDR4:{k16:{n:"Kit 2 × 8 GB DDR4-3200",p:70},k32:{n:"Kit 2 × 16 GB DDR4-3200",p:120}},DDR5:{k32:{n:"Kit 2 × 16 GB DDR5-6000",p:280},k16:{n:"Kit 2 × 8 GB DDR5-5600",p:150}}};
+
+/* ============ LINGUA E PAESE ============ */
+%%I18N%%
+const REGIONS={
+ IT:{n:"Italia (€)",cur:"EUR",rate:1,loc:"it-IT",shops:[["Trovaprezzi","https://www.trovaprezzi.it/categoria.aspx?id=-1&libera="],["Amazon.it","https://www.amazon.it/s?k="]],used:["eBay","https://www.ebay.it/sch/i.html?_nkw="]},
+ US:{n:"United States ($)",cur:"USD",rate:1,loc:"en-US",shops:[["PCPartPicker","https://pcpartpicker.com/search/?q="],["Amazon","https://www.amazon.com/s?k="],["Newegg","https://www.newegg.com/p/pl?d="]],used:["eBay","https://www.ebay.com/sch/i.html?_nkw="]},
+ GB:{n:"United Kingdom (£)",cur:"GBP",rate:0.86,loc:"en-GB",shops:[["PCPartPicker UK","https://uk.pcpartpicker.com/search/?q="],["Amazon.co.uk","https://www.amazon.co.uk/s?k="]],used:["eBay","https://www.ebay.co.uk/sch/i.html?_nkw="]},
+ DE:{n:"Deutschland (€)",cur:"EUR",rate:1,loc:"de-DE",shops:[["idealo","https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="],["Amazon.de","https://www.amazon.de/s?k="]],used:["eBay","https://www.ebay.de/sch/i.html?_nkw="]},
+ FR:{n:"France (€)",cur:"EUR",rate:1,loc:"fr-FR",shops:[["LeDénicheur","https://ledenicheur.fr/search?search="],["Amazon.fr","https://www.amazon.fr/s?k="]],used:["eBay","https://www.ebay.fr/sch/i.html?_nkw="]},
+ ES:{n:"España (€)",cur:"EUR",rate:1,loc:"es-ES",shops:[["PcComponentes","https://www.pccomponentes.com/buscar/?query="],["Amazon.es","https://www.amazon.es/s?k="]],used:["eBay","https://www.ebay.es/sch/i.html?_nkw="]},
+ INT:{n:"Altro paese ($)",cur:"USD",rate:1,loc:"en-US",shops:[["PCPartPicker","https://pcpartpicker.com/search/?q="],["Amazon","https://www.amazon.com/s?k="]],used:["eBay","https://www.ebay.com/sch/i.html?_nkw="]}
+};
+const prefGet=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+const prefSet=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
+const NAVL=String(navigator.language||"en").toLowerCase();
+let LANG=prefGet("rigscore.lang")||(NAVL.startsWith("it")?"it":"en");
+let REGION=prefGet("rigscore.region")||({it:"IT",de:"DE",fr:"FR",es:"ES"}[NAVL.slice(0,2)]||(NAVL==="en"||NAVL.endsWith("-us")?"US":NAVL.endsWith("-gb")?"GB":"INT"));
+if(!REGIONS[REGION]) REGION="INT";
+const REG=()=>REGIONS[REGION];
+const LOC=()=>LANG==="it"?"it-IT":(REG().loc.startsWith("en")?REG().loc:"en-GB");
+const EN_SORTED=EN_PAIRS.slice().sort((a,b)=>b[0].length-a[0].length);
+function trS(s){ if(LANG!=="en"||s==null) return s; let r=String(s); const k=r.trim(); if(EN_EXACT.has(k)) return r.replace(k,EN_EXACT.get(k)); for(const [a,b] of EN_SORTED){ if(r.includes(a)) r=r.split(a).join(b); } return r; }
+const NO_TR="code,textarea,script,style";
+function trDOM(root){
+  if(LANG!=="en"||!root) return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); const list=[]; let t; while((t=w.nextNode())) list.push(t);
+  if(root.nodeType===3) list.push(root);
+  for(const x of list){ const p=x.parentElement; if(!p||p.closest(NO_TR)) continue; const v=trS(x.nodeValue); if(v!==x.nodeValue) x.nodeValue=v; }
+  if(root.querySelectorAll){ const els=[...root.querySelectorAll("[placeholder],[aria-label]")]; if(root.hasAttribute&&(root.hasAttribute("placeholder")||root.hasAttribute("aria-label"))) els.push(root); els.forEach(el=>["placeholder","aria-label"].forEach(at=>{ if(el.hasAttribute(at)){ const v=trS(el.getAttribute(at)); if(v!==el.getAttribute(at)) el.setAttribute(at,v); } })); }
+}
+const MO=new MutationObserver(ms=>{ if(LANG!=="en") return; for(const m of ms) for(const nd of m.addedNodes){ if(nd.nodeType===1) trDOM(nd); else if(nd.nodeType===3&&nd.parentElement&&!nd.parentElement.closest(NO_TR)){ const v=trS(nd.nodeValue); if(v!==nd.nodeValue) nd.nodeValue=v; } } });
+function initPrefs(){
+  document.documentElement.lang=LANG;
+  const ls=document.getElementById("langSel"), rs=document.getElementById("regSel");
+  rs.innerHTML=Object.entries(REGIONS).map(([k,r])=>`<option value="${k}">${r.n}</option>`).join("");
+  ls.value=LANG; rs.value=REGION;
+  ls.addEventListener("change",()=>{ prefSet("rigscore.lang",ls.value); location.reload(); });
+  rs.addEventListener("change",()=>{ REGION=rs.value; prefSet("rigscore.region",REGION); if(typeof recompute==="function"&&P) recompute(); });
+  trDOM(document.body);
+  MO.observe(document.body,{childList:true,subtree:true});
+}
+
+/* ============ UTILITY ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtE=p=>"≈ "+new Intl.NumberFormat(LOC(),{style:"currency",currency:REG().cur,maximumFractionDigits:0}).format(Math.round(p*REG().rate/10)*10);
+const fmtD=d=>{ if(!d) return "—"; const x=new Date(d); return isNaN(x)?d:x.toLocaleDateString(LOC(),{month:"short",year:"numeric"}); };
+const yearsSince=d=>{ const x=new Date(d); return isNaN(x)?null:(Date.now()-x)/3.156e10; };
+function shop(q,used){ const e=encodeURIComponent(q), R=REG(); return R.shops.map(([n,u])=>`<a href="${u}${e}" target="_blank" rel="noopener">${n}</a>`).join("")+(used?`<a href="${R.used[1]}${e}" target="_blank" rel="noopener">${R.used[0]} (usato)</a>`:""); }
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=trS(t); document.body.appendChild(d); setTimeout(()=>d.remove(),2200); }
+async function copyText(t){ try{ await navigator.clipboard.writeText(t); return true; }catch(e){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); return ok; } }
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const RAMTYPE={20:"DDR",21:"DDR2",24:"DDR3",26:"DDR4",27:"LPDDR",28:"LPDDR2",29:"LPDDR3",30:"LPDDR4",34:"DDR5",35:"LPDDR5"};
+const LAPTOP_CH=[8,9,10,11,12,14,18,21,30,31,32], DESK_CH=[3,4,5,6,7,15,16,17,23,24], AIO_CH=[13], MINI_CH=[35,36];
+
+/* ============ STATO ============ */
+let P=null;           // profilo grezzo
+let OV=store.get("rigscore.ov")||{}; // correzioni manuali
+let A=null;           // analisi
+let UI={tab:"over",res:0,q:"",only:"all",sort:"pct"};
+
+/* ============ SCANSIONE DAL BROWSER ============ */
+function parseRenderer(r){
+  if(!r) return null;
+  let s=r;
+  if(/^ANGLE \(/.test(s)){ const inner=s.replace(/^ANGLE \(/,"").replace(/\)$/,""); const parts=inner.split(", "); s=parts.length>1?parts[1]:parts[0]; }
+  return s.replace(/\s*\(0x[0-9a-f]+\).*/i,"").replace(/\s+(Direct3D|OpenGL|Vulkan|Metal|vs_|D3D).*/i,"").trim();
+}
+function measureHz(){ return new Promise(res=>{ let n=0,t0=0; const f=t=>{ if(!t0) t0=t; n++; if(t-t0<600) requestAnimationFrame(f); else { const hz=(n-1)/((t-t0)/1000); const std=[60,75,90,100,120,144,165,170,180,240,360]; const near=std.reduce((a,b)=>Math.abs(b-hz)<Math.abs(a-hz)?b:a); res(hz<50?null:Math.abs(near-hz)<8?near:Math.round(hz)); } }; requestAnimationFrame(f); setTimeout(()=>res(null),1500); }); }
+/* Benchmark CPU single-thread. Taratura: Intel i7-4700MQ (indice 30) = 13.600 punti. */
+const BENCH_REF=13600;
+function cpuBench(ms){
+  const arr=new Float64Array(4096); let x=1,n=0; const step=()=>{ for(let i=0;i<4096;i++){ x=(Math.imul(x,1103515245)+12345)|0; arr[i]=Math.sqrt((x>>>8)&0xffff)+arr[(i*7)&4095]*0.5; } };
+  let g=0; const w=performance.now(); while(performance.now()-w<150&&g++<60000) step();
+  const runs=[]; for(let r=0;r<3;r++){ n=0; const t0=performance.now(); while(performance.now()-t0<ms&&n<200000) { step(); n++; } const dt=performance.now()-t0; if(dt>0) runs.push(n/dt*1000); }
+  if(!runs.length) return null;
+  return {pts:Math.round(Math.max(...runs)), chk:arr[5]};
+}
+const threadAdj=t=>!t?1:t>=12?1.04:t>=8?1:t>=6?0.95:t>=4?0.85:0.65;
+const benchToIdx=(pts,threads)=>clamp(Math.round(30*Math.pow(pts/BENCH_REF,1.3)*threadAdj(threads)),5,100);
+const idxToBench=idx=>Math.round(BENCH_REF*Math.pow(idx/30,1/1.3));
+let BENCH=null;
+async function browserScan(){
+  const dm=navigator.deviceMemory||null;
+  const p={source:"browser",t:new Date().toISOString(),cpu:{name:null,threads:navigator.hardwareConcurrency||null},gpus:[],ram:{totalGB:dm,approx:!!dm,capped:dm===8&&!/Chrome\/1[4-9]\d/.test(navigator.userAgent)},os:{},sys:{},disks:[],vols:[],evidence:[]};
+  try{ const e=await navigator.storage?.estimate?.(); if(e&&e.quota>20e9&&/Chrome|Edg/.test(navigator.userAgent)) p.diskEstGB=Math.round(e.quota/0.6/1e9); }catch(e){}
+  try{
+    const c=document.createElement("canvas");
+    const gl=c.getContext("webgl",{powerPreference:"high-performance"})||c.getContext("experimental-webgl");
+    if(gl){ const ext=gl.getExtension("WEBGL_debug_renderer_info"); const r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER); const name=parseRenderer(r); if(name) p.gpus.push({name,raw:r}); }
+  }catch(e){}
+  try{
+    if(navigator.userAgentData?.getHighEntropyValues){
+      const h=await navigator.userAgentData.getHighEntropyValues(["platformVersion","architecture","bitness"]);
+      if(h.platform==="Windows"){ const maj=parseInt(h.platformVersion); p.os.name=maj>=13?"Windows 11":maj>0?"Windows 10":"Windows"; p.os.fromBrowser=true; }
+      else p.os.name=h.platform;
+      p.os.arch=h.bitness==="64"?"64-bit":h.bitness;
+    }
+  }catch(e){}
+  if(!p.os.name){ const ua=navigator.userAgent; p.os.name=/Windows NT 10/.test(ua)?"Windows 10/11":/Windows/.test(ua)?"Windows":/Mac OS X/.test(ua)?"macOS":/Linux/.test(ua)?"Linux":"Sconosciuto"; p.os.fromBrowser=true; }
+  try{
+    if(navigator.getBattery){ const b=await navigator.getBattery(); const mains=b.charging&&b.level===1&&b.chargingTime===0; p.sys.battery=!mains; p.sys.batteryLevel=Math.round(b.level*100); if(!mains) p.evidence.push("batteria rilevata ("+Math.round(b.level*100)+"%)"); }
+  }catch(e){}
+  const g=p.gpus[0]?.name||"";
+  let laptop=null;
+  if(p.sys.battery) laptop=true;
+  if(/laptop|max-q|mobile|\b\d{3,4}m\b|\bmx ?\d{3}\b|\b\d{3}mx\b/i.test(g)){ laptop=true; p.evidence.push("GPU per portatili"); }
+  if(laptop===null && /iris xe|radeon 7\d0m|radeon 6\d0m|radeon 8\d0m|arc 1\d0v|uhd graphics 6[02]0/i.test(g)){ laptop=true; p.evidence.push("grafica integrata tipica dei portatili"); }
+  if(navigator.maxTouchPoints>0 && laptop===null){ p.evidence.push("schermo touch"); }
+  p.type=laptop?"laptop":"unknown";
+  p.display={w:Math.round(screen.width*(devicePixelRatio||1)),h:Math.round(screen.height*(devicePixelRatio||1)),hz:await measureHz()};
+  return p;
+}
+
+/* ============ SCANSIONE COMPLETA (codice da PowerShell) ============ */
+async function decodeScan(txt){
+  let t=String(txt||"").trim().replace(/\s+/g,"");
+  try{ t=decodeURIComponent(t); }catch(_){}
+  const m=t.match(/PCSCAN([12])[:-]([A-Za-z0-9+/=_-]+)/); if(!m) throw new Error("Il testo incollato non contiene un codice RigScore. Deve iniziare con PCSCAN.");
+  let b=m[2].replace(/-/g,"+").replace(/_/g,"/"); while(b.length%4) b+="=";
+  const bin=atob(b); let bytes=new Uint8Array(bin.length); for(let k=0;k<bin.length;k++) bytes[k]=bin.charCodeAt(k);
+  if(m[1]==="2"){
+    if(typeof DecompressionStream==="undefined") throw new Error("Questo browser non sa decomprimere il codice: usa Chrome, Edge o Firefox aggiornati.");
+    const ds=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+    bytes=new Uint8Array(await new Response(ds).arrayBuffer());
+  }
+  const j=JSON.parse(new TextDecoder("utf-8").decode(bytes));
+  const ch=(j.sys&&j.sys.chassis)||[];
+  let type="unknown";
+  if(ch.some(c=>LAPTOP_CH.includes(c))||j.sys?.pcType===2) type="laptop";
+  else if(ch.some(c=>AIO_CH.includes(c))) type="aio";
+  else if(ch.some(c=>MINI_CH.includes(c))) type="mini";
+  else if(ch.some(c=>DESK_CH.includes(c))||j.sys?.pcType===1) type="desktop";
+  if(type==="unknown") type=j.sys?.battery?"laptop":"desktop";
+  const ram=j.ram||{}; if(ram.sumGB) ram.totalGB=ram.sumGB;
+  const disp=(j.gpu||[]).find(g=>g.w)||null;
+  if(disp&&j.mon?.length){ const mo=j.mon.find(x=>x.n)||j.mon[0]; disp.mon=[mo.mf,mo.n].filter(Boolean).join(" "); }
+  return {source:"scan",t:j.t,type,sys:j.sys||{},os:j.os||{},cpu:j.cpu||{},gpus:j.gpu||[],ram,disks:j.disks||[],vols:j.vols||[],sw:j.sw||{},display:disp};
+}
+
+/* ============ ANALISI ============ */
+function osStatus(os){
+  const name=os.name||"", b=+os.build||0, now=new Date();
+  const res=(end,label)=>{ const e=new Date(end); const left=(e-now)/864e5; return {end:e, ok:left>180, soon:left>0&&left<=180, over:left<=0, label}; };
+  if(os.fromBrowser){ if(/11/.test(name)) return {ok:true,label:"Windows 11 (versione esatta non leggibile dal browser)"}; if(/10/.test(name)) return {unknown:true,label:"Windows 10 o 11: il browser non distingue edizione e versione"}; return {unknown:true,label:name}; }
+  if(/ltsc|ltsb/i.test(name)){
+    const iot=/iot/i.test(name);
+    if(b===17763) return res(iot?"2029-01-09":"2029-01-09","LTSC 2019");
+    if(b===19044) return res(iot?"2032-01-13":"2027-01-12",iot?"IoT LTSC 2021":"LTSC 2021");
+    if(b>=26100) return res(iot?"2034-01-10":"2029-10-09",iot?"IoT LTSC 2024":"LTSC 2024");
+    return res("2026-10-13","LTSB");
+  }
+  if(b && b<22000) return {...res("2025-10-14","Windows 10"),esu:true};
+  if(b===22000) return res("2023-10-10","Windows 11 21H2");
+  if(b===22621||b===22631) return res("2025-11-11","Windows 11 "+(b===22631?"23H2":"22H2"));
+  if(b===26100) return res(/enterprise|education/i.test(name)?"2027-10-12":"2026-10-13","Windows 11 24H2");
+  if(b>=26200) return res(/enterprise|education/i.test(name)?"2028-10-10":"2027-10-12","Windows 11 "+(os.disp||"25H2"));
+  return {unknown:true,label:name||"Sconosciuto"};
+}
+function ramType(st){ if(!st) return null; if(RAMTYPE[st.type]) return RAMTYPE[st.type]; const sp=st.speed||0; return sp>=4400?"DDR5":sp>=2133?"DDR4":sp>0?"DDR3":null; }
+
+function analyze(p){
+  const o=OV;
+  let type=o.type&&o.type!=="auto"?o.type:p.type;
+  const isLap=type==="laptop";
+  // CPU
+  const cpuName=o.cpu||p.cpu?.name||"";
+  const ci=cpuInfo(cpuName);
+  let cpuS=ci.s;
+  const threads=p.cpu?.threads||null, cores=p.cpu?.cores||null;
+  const sameMachine=BENCH&&(!threads||threads===navigator.hardwareConcurrency)&&!/Android|iPhone|iPad/.test(navigator.userAgent);
+  let bench=null;
+  if(sameMachine){ bench={pts:BENCH.pts,idx:benchToIdx(BENCH.pts,threads)}; if(ci.s!=null){ bench.expected=idxToBench(ci.s); bench.ratio=BENCH.pts/bench.expected; } }
+  let cpuFromBench=false;
+  if(cpuS==null && bench){ cpuS=bench.idx; cpuFromBench=true; }
+  else if(cpuS==null && threads) cpuS=clamp(threads*4,12,55);
+  if(cpuS!=null && threads && threads<4 && !cpuFromBench) cpuS*=0.75;
+  if(!isLap && ci.mobile && type==="unknown") type="laptop";
+  // GPU
+  let gpus=(p.gpus||[]).map(g=>({...g,...gpuInfo(g.name,isLap||ci.mobile)}));
+  if(o.gpu){ gpus=[{name:o.gpu,manual:true,...gpuInfo(o.gpu,isLap)}].concat(gpus.filter(g=>g.name!==o.gpu)); }
+  gpus.sort((a,b)=>(b.s||0)-(a.s||0));
+  const gpu=gpus[0]||{name:"Non rilevata",s:null,known:false};
+  if(gpu.vramMB && gpu.kind!=="i") gpu.vramGB=Math.round(gpu.vramMB/1024); else gpu.vramGB=gpu.vram||0;
+  const gpuS=gpu.s;
+  // RAM
+  const sticks=p.ram?.sticks||[];
+  let ramGB=o.ram?+o.ram:(p.ram?.totalGB||null);
+  if(ramGB) ramGB=Math.round(ramGB);
+  const rtype=o.ramType||ramType(sticks[0]);
+  const ramSpeed=sticks[0]?.cfg||sticks[0]?.speed||null;
+  const ramRated=sticks[0]?.speed||null;
+  const soldered=sticks.some(s=>/LPDDR/.test(RAMTYPE[s.type]||""))||(isLap&&sticks.length>0&&sticks.every(s=>s.ff&&s.ff!==12&&s.ff!==8&&s.ff!==0));
+  const dual=sticks.length>=2;
+  // Archiviazione
+  const disks=p.disks||[];
+  const sysDisk=disks.find(d=>(d.letters||[]).includes("C"))||disks[0]||null;
+  let sysType=o.disk||(sysDisk?(sysDisk.media==="HDD"?"HDD":sysDisk.bus==="NVMe"?"NVMe":sysDisk.media==="SSD"?"SSD":sysDisk.bus==="NVMe"?"NVMe":"?"):null);
+  const cVol=(p.vols||[]).find(v=>v.l==="C:");
+  const os=o.os?{name:o.os,build:o.os==="Windows 11"?26200:19045}:(p.os||{});
+  // Punteggi 0-100
+  const gpuN=gpuS!=null?clamp(Math.round(Math.sqrt(gpuS/36000)*100),1,100):null;
+  const cpuN=cpuS!=null?Math.round(cpuS):null;
+  let ramN=ramGB?(ramGB>=32?100:ramGB>=16?78:ramGB>=12?58:ramGB>=8?40:18):null;
+  if(ramN&&sticks.length===1&&!soldered) ramN-=10;
+  if(ramN&&rtype==="DDR3") ramN-=8;
+  const stoN=sysType==="NVMe"?100:sysType==="SSD"?78:sysType==="HDD"?25:null;
+  const parts=[[gpuN,.55],[cpuN,.28],[ramN,.11],[stoN,.06]].filter(x=>x[0]!=null);
+  const wsum=parts.reduce((a,x)=>a+x[1],0);
+  const total=wsum?Math.round(parts.reduce((a,x)=>a+x[0]*x[1],0)/wsum):null;
+  const tier=total==null?"—":total>=80?"Fascia alta":total>=60?"Fascia medio-alta":total>=42?"Fascia media":total>=25?"Fascia base":"Fascia minima";
+  let bottleneck=null;
+  if(gpuN!=null&&cpuN!=null){
+    if(cpuN<gpuN*0.75-5) bottleneck={what:"cpu",text:`Il processore frena la scheda video: nei giochi la GPU non viene sfruttata del tutto (CPU ${cpuN} contro GPU ${gpuN}).`};
+    else if(gpuN<cpuN*0.6) bottleneck={what:"gpu",text:`La scheda video è il limite principale (GPU ${gpuN} contro CPU ${cpuN}): è il primo componente da aggiornare per giocare meglio.`};
+    else bottleneck={what:"none",text:"Processore e scheda video sono ben bilanciati."};
+  }
+  return {p,type,isLap,bench,cpu:{name:cpuName,s:cpuS,info:ci,threads,cores,fromBench:cpuFromBench},gpu,gpus,gpuS,ram:{gb:ramGB,type:rtype,speed:ramSpeed,rated:ramRated,sticks,slots:p.ram?.slots,maxGB:p.ram?.maxGB,soldered,dual,capped:p.ram?.capped&&!o.ram,approx:p.ram?.approx&&!o.ram},sysDisk,sysType,cVol,os,osSt:osStatus(os),scores:{gpuN,cpuN,ramN,stoN,total},tier,bottleneck,secureBoot:p.sys?.secureBoot,tpm:p.sw?.tpm};
+}
+
+/* ============ VALUTAZIONE GIOCHI ============ */
+const RES=[{l:"1080p",f:1},{l:"1440p",f:0.6},{l:"4K",f:0.3}];
+function evalGame(g,a,res,hyp){
+  const gpuS=(hyp?hyp.g:a.gpuS), cpuS=(hyp?hyp.c:a.cpu.s), ram=(hyp?32:a.ram.gb), rt=hyp?true:a.gpu.rt;
+  if(gpuS==null||cpuS==null) return {pct:null};
+  const rf=RES[res].f;
+  const rg=gpuS*rf/g.gRec, rc=Math.pow(cpuS/g.cRec,1.2);
+  const p=Math.min(rg,rc);
+  const atMin=clamp(g.gMin/g.gRec,0.08,0.9);
+  let pct = p<=atMin ? 40*p/atMin : p<=1 ? 40+30*(p-atMin)/(1-atMin) : 70+30*Math.min(1,(p-1)/1.2);
+  const why=[];
+  let limit=rg<rc?"GPU":"CPU";
+  if(cpuS<g.cMin*0.85){ pct=Math.min(pct,36); why.push("CPU sotto il minimo"); limit="CPU"; }
+  if(ram&&ram<g.rmin-0.6){ pct=Math.min(pct,32); why.push(`servono ${g.rmin} GB di RAM`); limit="RAM"; }
+  if(!hyp&&g.vram&&a.gpu.kind!=="i"&&a.gpu.vramGB&&a.gpu.vramGB<g.vram*0.75){ pct-=8; why.push(`VRAM ${a.gpu.vramGB} GB (consigliati ${g.vram})`); }
+  if(g.rt&&!rt){ pct=0; why.push("richiede una GPU con ray tracing"); limit="GPU"; }
+  let blocked=false;
+  if(!hyp&&g.sb&&a.secureBoot===false){ blocked=true; why.push("Secure Boot disattivato"); }
+  if(!hyp&&g.ssd&&a.sysType==="HDD") why.push("consigliato SSD");
+  pct=clamp(Math.round(pct),0,100);
+  const gp=g.fps*Math.pow(rg,0.95), cp=g.fps*1.5*rc;
+  const preset=pct>=90?"Ultra":pct>=75?"Alto":pct>=55?"Medio":pct>=38?"Basso":"—";
+  const fps=Math.min(gp*(pct>=75?1:pct>=55?1.25:1.7), cp*(pct>=55?1:1.07));
+  const verdict=g.rt&&!rt?["bad","Incompatibile"]:pct>=90?["good","Ultra"]:pct>=75?["good","Fluido"]:pct>=55?["info","Medio"]:pct>=38?["warn","Al minimo"]:["bad","Non gira"];
+  return {pct,fps:Math.round(fps),preset,verdict,why,limit,blocked,playable:pct>=38};
+}
+
+/* ============ RENDER: PANORAMICA ============ */
+function chipFor(n,kind){ if(n==null) return `<span class="chip neutral">da completare</span>`; const t=kind==="gpu"?[60,40,20]:[70,50,35]; return n>=t[0]?`<span class="chip good">Ottimo</span>`:n>=t[1]?`<span class="chip info">Buono</span>`:n>=t[2]?`<span class="chip warn">Sufficiente</span>`:`<span class="chip bad">Datato</span>`; }
+function meter(n){ if(n==null) return ""; const c=n>=60?"good":n>=35?"warn":"bad"; return `<div class="meter ${c}" role="img" aria-label="${n} su 100"><i style="width:${n}%"></i></div>`; }
+const TYPE_L={laptop:"Portatile",desktop:"PC fisso",aio:"All-in-one",mini:"Mini PC",unknown:"Tipo da confermare"};
+function gauge(v){
+  const r=78, c=2*Math.PI*r, f=v==null?0:v/100;
+  const col=v==null?"var(--line)":v>=60?"var(--good)":v>=35?"var(--warn)":"var(--bad)";
+  return `<svg viewBox="0 0 190 190" role="img" aria-label="Punteggio ${v??"non disponibile"} su 100">
+   <circle cx="95" cy="95" r="${r}" fill="none" stroke="var(--sunken)" stroke-width="14"/>
+   <circle cx="95" cy="95" r="${r}" fill="none" stroke="${col}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${(c*f).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 95 95)"/>
+   ${Array.from({length:11},(_,i)=>{const ang=(i/10)*2*Math.PI-Math.PI/2;const x1=95+(r-14)*Math.cos(ang),y1=95+(r-14)*Math.sin(ang),x2=95+(r-20)*Math.cos(ang),y2=95+(r-20)*Math.sin(ang);return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--muted)" stroke-width="1.5"/>`}).join("")}
+   <text x="95" y="102" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="46" font-weight="500" fill="var(--ink)">${v??"—"}</text>
+   <text x="95" y="128" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--muted)">/ 100</text></svg>`;
+}
+function renderOver(){
+  const a=A, p=a.p, s=a.scores;
+  const ge=GAMES.map(g=>evalGame(g,a,0));
+  const playable=ge.filter(x=>x.playable).length, fluid=ge.filter(x=>x.pct>=75).length;
+  const top=buildSoft(a).filter(x=>x.sev==="crit"||x.sev==="rec").slice(0,3);
+  let comps=[];
+  // CPU
+  const bt=a.bench?`benchmark ${a.bench.pts.toLocaleString(LOC())} punti${a.bench.ratio?` (${Math.round(a.bench.ratio*100)}% dell'atteso)`:""}`:"";
+  comps.push({k:"Processore",v:a.cpu.name||(a.cpu.fromBench?"Modello non leggibile dal browser: misurato col benchmark":"Modello non letto"),d:[a.cpu.cores?`${a.cpu.cores} core / ${a.cpu.threads} thread`:a.cpu.threads?`${a.cpu.threads} thread logici`:"",p.cpu?.mhz?`${(p.cpu.mhz/1000).toFixed(1)} GHz base`:"",a.cpu.info.plat?`socket ${a.cpu.info.plat}`:"",bt,!a.cpu.info.known&&a.cpu.name?"modello non in archivio, punteggio stimato":""].filter(Boolean).join(" · "),n:s.cpuN,kind:"cpu"});
+  const g2=a.gpus.slice(1).map(g=>g.name).join(", ");
+  comps.push({k:"Scheda video",v:a.gpu.name,d:[a.gpu.kind==="i"?"integrata":a.gpu.kind==="l"?"dedicata per portatile":"dedicata",a.gpu.vramGB?`${a.gpu.vramGB} GB VRAM`:"",a.gpu.rt?"ray tracing sì":"ray tracing no",a.gpu.note,g2?`anche: ${g2}`:"",a.gpu.known===false?"modello non in archivio":""].filter(Boolean).join(" · "),n:s.gpuN,kind:"gpu"});
+  const st=a.ram.sticks;
+  comps.push({k:"Memoria RAM",v:a.ram.gb?`${a.ram.capped?"8 GB o più":(a.ram.approx?"≈ ":"")+a.ram.gb+" GB"}${a.ram.type?" "+a.ram.type:""}${a.ram.speed?"-"+a.ram.speed:""}`:"Da indicare",d:st.length?[`${st.length} × ${st[0].gb} GB ${st[0].ff===12?"SO-DIMM":st[0].ff===8?"DIMM":""}`.trim(),a.ram.slots?`${st.length}/${a.ram.slots} slot occupati`:"",a.ram.maxGB?`max ${a.ram.maxGB} GB`:"",a.ram.dual?"dual channel":"single channel",st[0].part?st[0].maker+" "+st[0].part:""].filter(Boolean).join(" · "):(a.ram.capped?"Il browser non mostra oltre 8 GB: indica il valore in Scansione":a.ram.approx?"Valore arrotondato dal browser. Tipo (DDR3/4/5), velocità e slot si leggono con la scansione completa.":""),n:s.ramN});
+  const dl=(p.disks||[]).map(d=>{ const v=(p.vols||[]).filter(x=>(d.letters||[]).includes(x.l[0])).map(x=>`${x.l} ${x.free} GB liberi su ${x.gb}`).join(", "); return `${d.name} · ${d.media==="HDD"?"HDD":d.bus==="NVMe"?"SSD NVMe":d.media==="SSD"?"SSD "+(d.bus||""):d.media||"?"} · ${d.gb} GB${v?" · "+v:""}${d.health&&d.health!=="Healthy"?" · STATO: "+d.health:""}${d.wear!=null?` · usura ${d.wear}%`:""}`; });
+  comps.push({k:"Archiviazione",v:a.sysType?`Disco di sistema: ${a.sysType==="NVMe"?"SSD NVMe":a.sysType==="SSD"?"SSD SATA":a.sysType==="HDD"?"Hard disk meccanico":a.sysType}`:"Da indicare",d:dl.join("<br>")||(p.diskEstGB?`Disco di sistema da circa ${p.diskEstGB} GB (stima dal browser). Il tipo di disco si legge solo con la scansione completa.`:"Il browser non può leggere i dischi"),n:s.stoN,raw:true});
+  const os=a.osSt;
+  comps.push({k:"Sistema",v:`${a.os.name||"—"}${p.os?.disp&&!/ltsc/i.test(a.os.name||"")?" "+p.os.disp:""}`,d:[p.os?.build&&!p.os.fromBrowser?`build ${p.os.build}.${p.os.ubr||0}`:"",p.os?.arch||"",os.end?(os.over?`supporto terminato il ${os.end.toLocaleDateString(LOC())}`:`supportato fino al ${os.end.toLocaleDateString(LOC())}`):os.label,p.os?.installed?`installato ${fmtD(p.os.installed)}`:""].filter(Boolean).join(" · "),chip:os.over?`<span class="chip bad">Non supportato</span>`:os.soon?`<span class="chip warn">In scadenza</span>`:os.ok?`<span class="chip good">Supportato</span>`:`<span class="chip neutral">Da verificare</span>`});
+  if(p.sys?.board||p.sys?.model) comps.push({k:"Scheda madre",v:`${p.sys.maker||""} ${p.sys.model||""}`.trim(),d:[p.sys.board?`scheda ${p.sys.board}`:"",p.sys.bios?`BIOS ${p.sys.bios} (${fmtD(p.sys.biosDate)})`:"",p.sys.uefi?"UEFI":"BIOS legacy",p.sys.secureBoot?"Secure Boot attivo":"Secure Boot spento",a.tpm?`TPM ${a.tpm}`:p.sw&&!p.sw.admin?"TPM: serve PowerShell come amministratore":""].filter(Boolean).join(" · "),chip:p.sys.secureBoot===false?`<span class="chip warn">Secure Boot spento</span>`:""});
+  const disp=p.display||{};
+  if(disp.w) comps.push({k:"Schermo",v:`${disp.w} × ${disp.h}${disp.hz?" @ "+disp.hz+" Hz":""}`,d:[disp.mon?`monitor ${disp.mon}`:"",disp.hz&&disp.hz<=60?"60 Hz: un monitor a 144 Hz rende i giochi molto più fluidi":""].filter(Boolean).join(" · ")});
+  if(p.sw?.net?.length) comps.push({k:"Rete",v:p.sw.net.filter(n=>!/tailscale|virtual|vpn|hyper-v|loopback|wan miniport/i.test(n.n)).map(n=>`${n.wifi?"Wi-Fi":"Cavo"} · ${n.speed}`).join(", ")||"—",d:p.sw.net.map(n=>n.n).join(", ")});
+  if(a.isLap&&(p.sys?.batteryHealth||p.sys?.battery)) comps.push({k:"Batteria",v:p.sys.batteryHealth?`Salute ${p.sys.batteryHealth}%`:"Presente",d:p.sys.batteryHealth?"capacità attuale rispetto a quella di fabbrica":"salute leggibile solo con PowerShell come amministratore",chip:p.sys.batteryHealth?(p.sys.batteryHealth<60?`<span class="chip bad">Usurata</span>`:p.sys.batteryHealth<80?`<span class="chip warn">Calata</span>`:`<span class="chip good">Buona</span>`):""});
+
+  const banner = p.source!=="scan" ? `<div class="banner warn"><p><b>Analisi parziale dal browser.</b> Ho rilevato da solo scheda video, thread, RAM approssimativa e velocità della CPU (benchmark). Per sicurezza nessun sito può leggere modello della CPU, tipo di RAM, dischi e scheda madre. La scansione completa li legge in 30 secondi: un clic o un comando, poi RigScore si apre con i risultati.</p><button class="btn primary" data-go="scan">Fai la scansione completa</button></div>`:"";
+  $("#p-over").innerHTML=`${banner}
+  <div class="hero">
+    <div class="panel gauge">
+      <span class="eyebrow">Punteggio gaming</span>
+      ${gauge(s.total)}
+      <div class="tier">${a.tier}</div>
+      <div class="row" style="justify-content:center"><span class="chip accent">${TYPE_L[a.type]}</span><span class="chip neutral">${p.source==="scan"?"Scansione completa":"Scansione rapida"}</span></div>
+      <div class="facts">
+        <div class="fact"><span class="eyebrow">Giochi che girano</span><b>${playable}/${GAMES.length}</b></div>
+        <div class="fact"><span class="eyebrow">Fluidi in 1080p</span><b>${fluid}/${GAMES.length}</b></div>
+        ${a.bench?`<div class="fact" style="grid-column:1/-1"><span class="eyebrow">Benchmark CPU misurato</span><b>${a.bench.pts.toLocaleString(LOC())} pt</b></div>`:""}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="sec-head"><h2>Il tuo PC</h2><span class="muted small mono">${p.t?"rilevato "+new Date(p.t).toLocaleString(LOC(),{dateStyle:"short",timeStyle:"short"}):""}</span></div>
+      <div>${comps.map(c=>`<div class="comp"><span class="k">${c.k}</span><div><div class="v">${esc(c.v)}</div>${c.d?`<div class="d">${c.raw?c.d.split("<br>").map(esc).join("<br>"):esc(c.d)}</div>`:""}${meter(c.n)}</div><div class="s">${c.chip!==undefined?c.chip:c.n!==undefined?chipFor(c.n,c.kind):""}</div></div>`).join("")}</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel stack"><h3>Equilibrio dei componenti</h3><p>${a.bottleneck?esc(a.bottleneck.text):"Servono modello di CPU e GPU per valutarlo."}</p>
+      <div class="kv" style="grid-template-columns:auto 1fr auto">${[["Scheda video",s.gpuN],["Processore",s.cpuN],["RAM",s.ramN],["Disco",s.stoN]].map(([l,n])=>`<dt>${l}</dt><dd>${meter(n)||"—"}</dd><dd>${n??"—"}</dd>`).join("")}</div>
+      <p class="note">Indici 0–100. 100 sulla scheda video corrisponde a una RTX 4090; 100 sul processore a un Ryzen 7 9800X3D.</p></div>
+    <div class="panel stack"><h3>Da fare per primo</h3>${top.length?`<div class="list">${top.map(x=>`<div class="item ${x.sev}"><span class="bar"></span><div class="body"><div class="t"><h3>${esc(x.title)}</h3></div><p class="small muted">${x.short||""}</p></div></div>`).join("")}</div><button class="btn sm" data-go="soft">Vedi tutte le ottimizzazioni</button>`:`<p class="muted">Nessun intervento urgente trovato.</p>`}</div>
+  </div>`;
+}
+
+/* ============ RENDER: GIOCHI ============ */
+function renderGames(){
+  const a=A;
+  if(a.gpuS==null||a.cpu.s==null){ $("#p-games").innerHTML=`<div class="panel empty">Per stimare i giochi servono modello di processore e scheda video. <button class="btn sm" data-go="scan">Completa i dati</button></div>`; return; }
+  let rows=GAMES.map(g=>({g,e:evalGame(g,a,UI.res)}));
+  if(UI.q) rows=rows.filter(r=>r.g.n.toLowerCase().includes(UI.q.toLowerCase()));
+  if(UI.only==="ok") rows=rows.filter(r=>r.e.playable); else if(UI.only==="no") rows=rows.filter(r=>!r.e.playable);
+  rows.sort(UI.sort==="pct"?(x,y)=>y.e.pct-x.e.pct:UI.sort==="name"?(x,y)=>x.g.n.localeCompare(y.g.n):(x,y)=>y.g.y-x.g.y);
+  const all=GAMES.map(g=>evalGame(g,a,UI.res)); const avg=Math.round(all.reduce((s,e)=>s+e.pct,0)/all.length);
+  $("#p-games").innerHTML=`<div class="sec-head"><div class="stack" style="gap:6px"><h2>Come girano i giochi</h2><p class="muted small">Percentuale = quanto il tuo PC copre i requisiti del gioco: 40% = requisiti minimi, 70% = consigliati, 100% = ampio margine per i dettagli al massimo. Gli FPS sono una stima a ${RES[UI.res].l} con il preset indicato.</p></div><div class="fact" style="min-width:150px"><span class="eyebrow">Media a ${RES[UI.res].l}</span><b>${avg}%</b></div></div>
+  <div class="panel stack">
+   <div class="gtools">
+    <label class="f">Cerca un gioco<input type="search" id="gq" value="${esc(UI.q)}" placeholder="es. Cyberpunk"></label>
+    <div class="f seg" role="group" aria-label="Risoluzione">${RES.map((r,i)=>`<button aria-pressed="${UI.res===i}" data-res="${i}">${r.l}</button>`).join("")}</div>
+    <div class="f seg" role="group" aria-label="Filtro">${[["all","Tutti"],["ok","Girano"],["no","Non girano"]].map(([k,l])=>`<button aria-pressed="${UI.only===k}" data-only="${k}">${l}</button>`).join("")}</div>
+    <label class="f" style="flex:0 1 180px">Ordina<select id="gsort"><option value="pct"${UI.sort==="pct"?" selected":""}>Per percentuale</option><option value="name"${UI.sort==="name"?" selected":""}>Per nome</option><option value="year"${UI.sort==="year"?" selected":""}>Più recenti</option></select></label>
+   </div>
+   <div class="games">${rows.map(({g,e})=>`<div class="game">
+     <div><div class="name">${esc(g.n)} <span class="muted small mono">${g.y}</span></div>
+      <div class="req">Min: ${esc(g.gmin)} · ${esc(g.cmin)} · ${g.rmin} GB &nbsp;|&nbsp; Consigliati: ${esc(g.grec)} · ${esc(g.crec)} · ${g.rrec} GB${g.ssd?" · SSD":""}</div>
+      ${e.why.length||g.note?`<div class="why">${e.blocked?"<b>Bloccato finché non attivi Secure Boot.</b> ":""}${esc(e.why.join(" · "))}${e.why.length&&g.note?" · ":""}${g.note&&!e.blocked?esc(g.note):""}</div>`:""}</div>
+     <div class="pbar"><span class="pct">${e.pct}%</span>${meter(e.pct)}<span class="chip ${e.verdict[0]}">${e.verdict[1]}</span></div>
+     <div class="fps">${e.playable?`<b>≈${e.fps}</b> fps<br><span class="muted">${e.preset} · limite ${e.limit}</span>`:`<span class="muted">limite ${e.limit}</span>`}</div>
+    </div>`).join("")||`<div class="empty">Nessun gioco corrisponde.</div>`}</div>
+  </div>
+  <p class="note">Requisiti dalle schede ufficiali dei giochi, semplificati. Le stime non contano driver, temperature e patch: possono variare del 20–30%.</p>`;
+  $("#nGames").textContent=all.filter(e=>e.playable).length+"/"+GAMES.length;
+}
+
+/* ============ OTTIMIZZAZIONI SOFTWARE ============ */
+const BLOAT_APPX=/BingNews|BingWeather|BingSearch|GetHelp|Getstarted|MicrosoftSolitaire|\.People|SkypeApp|ZuneMusic|ZuneVideo|YourPhone|Clipchamp|MicrosoftTeams|MSTeams|Todos|Disney|Spotify|TikTok|CandyCrush|king\.com|Facebook|Instagram|LinkedIn|MicrosoftOfficeHub|OutlookForWindows|Copilot|549981C3F5F10|PowerAutomate|WindowsFeedbackHub|Microsoft3DViewer|MixedReality|Wallet|WindowsMaps|Microsoft\.News|Messaging|OneConnect|Print3D|DevHome|Family|QuickAssist/i;
+const HEAVY_START=/Adobe|Autodesk|Creative ?Cloud|CCX|OneDrive|Teams|Spotify|Discord|Epic|EADM|EA ?app|Origin|Ubisoft|Battle\.net|Ollama|Docker|EdgeAutoLaunch|Opera|Skype|Zoom|Dropbox|Google ?Drive|iCloud|Razer|Corsair|iCUE|Logi|Wallpaper|Roblox|AnyDesk|Parsec|Tailscale|WhatsApp|Telegram|uTorrent|qBittorrent/i;
+function legacyGPU(g){ const n=norm(g.name); if(/^(gt|gtx) [67]\d\d m?$/.test(n.replace(/ m$/,"m"))||/\b(gt|gtx) [67]\d\dm\b/.test(n)) return "Kepler"; if(/hd graphics (4000|4400|4600|5000|5500|6000|2500|3000)/.test(n)||/iris pro/.test(n)) return "Intel legacy"; if(/\br[579] \d{3}\b|hd \d{4}/.test(n)) return "AMD legacy"; return null; }
+function nvVer(v){ const p=String(v||"").split("."); if(p.length<4) return null; const s=(p[2].slice(-1)+p[3]).padStart(5,"0"); return (+s.slice(0,3))+"."+s.slice(3); }
+function buildSoft(a){
+  const p=a.p, sw=p.sw||{}, L=[];
+  const add=(o)=>L.push(o);
+  const full=p.source==="scan";
+  // Sistema operativo
+  const os=a.osSt;
+  if(full||!a.os.fromBrowser){
+    if(os.over){
+      const w11ok=(a.cpu.info.vendor==="intel"&&(a.cpu.info.gen||0)>=8)||(a.cpu.info.vendor==="amd"&&(a.cpu.info.gen||0)>=2);
+      add({sev:"crit",area:"Sistema",title:`${os.label}: supporto terminato`,short:"Niente più aggiornamenti di sicurezza.",body:`<p>Il tuo Windows non riceve più patch di sicurezza${os.esu?" (anche il programma ESU per Windows 10 è terminato il 13 ottobre 2026)":""}. ${w11ok?"Il processore è compatibile con Windows 11: aggiorna da Impostazioni › Windows Update o con l'Assistente all'installazione di Windows 11.":"Il processore non è nella lista ufficiale di Windows 11. Alternative: Windows 11 IoT Enterprise LTSC 2024 (supportato fino al 2034, licenza aziendale) oppure una distribuzione Linux per giocare come Bazzite o Linux Mint con Steam/Proton (attenzione: i giochi con anti-cheat a livello kernel come Valorant, Fortnite e Battlefield non funzionano su Linux)."}</p>`});
+    } else if(os.soon){
+      add({sev:"rec",area:"Sistema",title:`${os.label}: supporto in scadenza`,short:`Scade il ${os.end.toLocaleDateString(LOC())}.`,body:`<p>Il supporto termina il ${os.end.toLocaleDateString(LOC())}. Pianifica l'aggiornamento alla versione successiva da Windows Update.</p>`});
+    } else if(os.ok){
+      add({sev:"ok",area:"Sistema",title:`${os.label}: supportato`,body:`<p>Supporto fino al ${os.end.toLocaleDateString(LOC())}.${/ltsc/i.test(a.os.name||"")?" LTSC non ha Microsoft Store né app Xbox: i giochi di Game Pass per PC e alcuni titoli dello Store non si installano senza aggiungerli a mano.":""}</p>`});
+    }
+  }
+  // Driver GPU
+  const gList=(p.gpus||[]);
+  gList.forEach(g=>{
+    if(!g.driverDate) return;
+    const age=yearsSince(g.driverDate), leg=legacyGPU(g), isNv=/nvidia|geforce/i.test(g.name), isAmd=/amd|radeon/i.test(g.name);
+    const vtxt=isNv&&nvVer(g.driver)?`versione ${nvVer(g.driver)}`:`versione ${g.driver}`;
+    if(leg){
+      add({sev:age>4&&/Intel/.test(leg)?"rec":"opt",area:"Driver",title:`Driver ${g.name}: GPU fuori supporto`,short:`Driver del ${fmtD(g.driverDate)}.`,body:`<p>Hai il driver del ${fmtD(g.driverDate)} (${esc(vtxt)}). Questa GPU (${leg}) non riceve più driver nuovi. ${/Intel/.test(leg)?"Il tuo driver è più vecchio dell'ultima versione legacy: scaricala dal sito Intel cercando il modello della GPU (sezione driver legacy) oppure tramite Windows Update › Aggiornamenti facoltativi.":isNv&&nvVer(g.driver)==="425.31"?"Hai già l'ultimo driver uscito per questa GPU: niente da fare.":"Installa l'ultima versione legacy dal sito del produttore."}</p>`});
+    } else if(age>0.5){
+      add({sev:age>1?"rec":"opt",area:"Driver",title:`Aggiorna il driver di ${g.name}`,short:`Driver del ${fmtD(g.driverDate)}: i nuovi giochi richiedono driver recenti.`,body:`<p>Driver del ${fmtD(g.driverDate)} (${esc(vtxt)}). I driver recenti correggono crash e migliorano le prestazioni nei giochi nuovi, a volte del 5–15%.</p><p>${isNv?`Scarica l'<a href="https://www.nvidia.com/${LANG==="it"?"it-it":"en-us"}/software/nvidia-app/" target="_blank" rel="noopener">app NVIDIA</a>.`:isAmd?`Scarica <a href="https://www.amd.com/${LANG==="it"?"it":"en"}/support/download/drivers.html" target="_blank" rel="noopener">AMD Software: Adrenalin Edition</a>.`:`Usa l'<a href="https://www.intel.com/content/www/${LANG==="it"?"it/it":"us/en"}/support/detect.html" target="_blank" rel="noopener">assistente driver Intel</a>.`} Per un'installazione pulita puoi usare DDU (Display Driver Uninstaller) in modalità provvisoria.</p>`});
+    } else add({sev:"ok",area:"Driver",title:`Driver ${g.name} aggiornato`,body:`<p>Driver del ${fmtD(g.driverDate)}.</p>`});
+  });
+  // GPU ibride portatili
+  if(gList.length>=2&&a.gpus.some(g=>g.kind==="i")&&a.gpus.some(g=>g.kind!=="i")){
+    const dg=a.gpus.find(g=>g.kind!=="i");
+    add({sev:"rec",area:"Prestazioni",title:`Fai usare ai giochi la ${dg.name}`,short:"Con due GPU Windows a volte avvia i giochi sulla grafica integrata.",body:`<p>Il PC ha una grafica integrata e una dedicata. Apri Impostazioni › Sistema › Schermo › Grafica, aggiungi l'eseguibile del gioco e scegli <b>Prestazioni elevate</b>.${/nvidia|geforce/i.test(dg.name)?" In alternativa: Pannello di controllo NVIDIA › Gestisci impostazioni 3D › Processore grafico preferito › Processore NVIDIA ad alte prestazioni.":""} Tieni il portatile collegato alla corrente mentre giochi.</p>`,cmd:"start ms-settings:display-advancedgraphics"});
+  }
+  // Piano energetico
+  if(sw.plan){
+    const hi=/high|ultimate|elevate|prestazioni|massime/i.test(sw.plan);
+    if(hi) add({sev:"ok",area:"Prestazioni",title:`Piano energetico: ${sw.plan}`,body:"<p>Già impostato per le massime prestazioni.</p>"});
+    else add({sev:"rec",area:"Prestazioni",title:"Attiva il piano energetico Prestazioni elevate",short:`Ora è attivo “${sw.plan}”.`,body:`<p>Il piano “${esc(sw.plan)}” abbassa le frequenze per risparmiare. ${a.isLap?"Sul portatile usalo solo collegato alla corrente; in Windows 11 scegli anche Modalità risparmio energia › Prestazioni ottimali.":"Sul PC fisso puoi attivare anche il piano Prestazioni eccellenti (primo comando, poi selezionalo in Opzioni risparmio energia)."}</p>`,cmd:a.isLap?"powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c":"powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61"});
+  }
+  // Benchmark vs atteso
+  if(a.bench?.ratio){
+    const r=Math.round(a.bench.ratio*100);
+    if(r<70) add({sev:"rec",area:"Prestazioni",title:`La CPU rende il ${r}% del previsto`,short:"Possibile surriscaldamento, risparmio energetico o processi in background.",body:`<p>Il benchmark nel browser ha misurato ${a.bench.pts.toLocaleString(LOC())} punti, mentre un ${esc(a.cpu.name)} dovrebbe farne circa ${a.bench.expected.toLocaleString(LOC())}. Cause tipiche: ${a.isLap?"portatile a batteria (collegalo alla corrente), ":""}piano energetico a risparmio, ventole impolverate o pasta termica secca, programmi pesanti aperti. Chiudi il resto, ripeti la scansione rapida dalla scheda Scansione e, se il risultato resta basso, controlla le temperature con HWiNFO.</p><p class="note">Il benchmark gira nel browser: varia di circa ±10% tra Chrome, Edge e Firefox.</p>`});
+    else add({sev:"ok",area:"Prestazioni",title:`CPU al ${r}% delle prestazioni attese`,body:"<p>Nessun segno di rallentamenti.</p>"});
+  }
+  // Modalità gioco
+  if(sw.gameMode===0) add({sev:"rec",area:"Prestazioni",title:"Attiva la Modalità gioco",short:"È disattivata.",body:"<p>Dà priorità al gioco e blocca gli aggiornamenti di Windows durante le sessioni.</p>",cmd:"reg add HKCU\\Software\\Microsoft\\GameBar /v AutoGameModeEnabled /t REG_DWORD /d 1 /f"});
+  else if(full) add({sev:"ok",area:"Prestazioni",title:"Modalità gioco attiva",body:"<p>Nulla da fare.</p>"});
+  // HAGS
+  const hagsGpu=a.gpus.find(g=>g.kind!=="i"&&g.s&&(/rtx|gtx 1[06]|rx [5-9]\d{3}|arc/i.test(g.name)));
+  if(full&&hagsGpu){ if(sw.hags!==2) add({sev:"opt",area:"Prestazioni",title:"Attiva la pianificazione GPU con accelerazione hardware",short:"Riduce la latenza, richiesta dal frame generation DLSS 3.",body:"<p>Impostazioni › Sistema › Schermo › Grafica › Modifica impostazioni grafiche predefinite › Pianificazione GPU con accelerazione hardware. Riavvia dopo averla attivata.</p>"}); else add({sev:"ok",area:"Prestazioni",title:"Pianificazione GPU hardware attiva",body:"<p>Nulla da fare.</p>"}); }
+  // VBS / HVCI
+  if(sw.vbs===2) add({sev:"opt",area:"Prestazioni",title:"Integrità della memoria (VBS) attiva",short:"Costa il 5–10% di FPS in alcuni giochi.",body:"<p>È una protezione utile. Se vuoi le massime prestazioni puoi disattivarla da Sicurezza di Windows › Sicurezza dispositivi › Isolamento core › Integrità della memoria. Scelta consapevole: riduce la protezione contro alcuni attacchi ai driver.</p>"});
+  // Avvio automatico
+  const su=(sw.startup||[]).map(x=>x.replace(/_[0-9A-F]{16,}$/i,"").replace(/-[0-9A-F]{12,}$/i,"").trim()).filter(x=>!/^SecurityHealth$|^RtkAudUService|^Windows/i.test(x));
+  if(su.length){
+    const heavy=su.filter(x=>HEAVY_START.test(x));
+    add({sev:su.length>=10?"rec":su.length>=6?"opt":"ok",area:"Pulizia",title:`${su.length} programmi partono all'avvio`,short:heavy.length?`Da valutare: ${heavy.slice(0,4).join(", ")}${heavy.length>4?"…":""}.`:"",body:`<p>Ognuno occupa RAM e CPU in background. Disattiva quelli che non ti servono subito: <kbd>Ctrl</kbd>+<kbd>Maiusc</kbd>+<kbd>Esc</kbd> › Avvio (Windows 10) o App di avvio (Windows 11) › Disabilita.</p><p class="small">${su.map(x=>HEAVY_START.test(x)?`<b>${esc(x)}</b>`:esc(x)).join(" · ")}</p><p class="note">In grassetto quelli che di solito si possono disattivare senza problemi.</p>`});
+  }
+  // Bloatware
+  const bx=(sw.appx||[]).filter(x=>BLOAT_APPX.test(x)), bw=sw.bloat||[];
+  const ltsc=/ltsc/i.test(a.os.name||"");
+  const tools=sw.tools||[];
+  if(full){
+    const found=bx.concat(bw);
+    const tl=tools.filter(t=>/Winhance|WinUtil|ShutUp|Debloat|Atlas|ReviOS/i.test(t));
+    add({sev:found.length>=3&&!ltsc?"rec":"opt",area:"Pulizia",title:found.length?`Rimuovi app superflue (${found.length} trovate)`:"Debloat di Windows",short:ltsc?"LTSC è già snello: basta un ritocco a telemetria e servizi.":found.length?`Trovate: ${found.slice(0,4).map(x=>x.replace(/^Microsoft\./,"")).join(", ")}.`:"Nessuna app inutile evidente.",
+      body:`${tl.length?`<p>Hai già usato <b>${esc(tl.join(", "))}</b>: riaprilo dopo i grandi aggiornamenti di Windows, che a volte reinstallano le app rimosse.</p>`:""}
+      ${found.length?`<p>Trovate: ${found.map(esc).join(" · ")}</p>`:""}
+      <p>${ltsc?"La tua edizione LTSC non ha Store, Copilot, app preinstallate e pubblicità: un debloat aggressivo serve a poco. Puoi comunque ridurre telemetria e servizi in background.":"Strumenti affidabili e open source, da avviare in PowerShell come amministratore:"}</p>
+      <ul><li><b>WinUtil</b> di Chris Titus: debloat, impostazioni consigliate e installazione programmi.</li><li><b>Win11Debloat</b> di Raphire: rimuove app, pubblicità, Copilot e suggerimenti (funziona anche su Windows 10).</li><li><b>O&amp;O ShutUp10++</b>: interruttori per privacy e telemetria, con interfaccia grafica.</li></ul>
+      <p class="note">Prima crea un punto di ripristino (primo comando). Evita gli “ottimizzatori” a pagamento tipo IObit o CCleaner: non migliorano gli FPS.</p>`,
+      cmds:["Checkpoint-Computer -Description \"Prima del debloat\" -RestorePointType MODIFY_SETTINGS","irm \"https://christitus.com/win\" | iex","& ([scriptblock]::Create((irm \"https://debloat.raphi.re/\")))"].concat(bx.slice(0,6).map(x=>`Get-AppxPackage *${x.replace(/^Microsoft\./,"").split(".")[0]}* | Remove-AppxPackage`))});
+  }
+  // Antivirus doppi
+  const av=(sw.av||[]).filter(x=>!/defender/i.test(x));
+  if(av.length) add({sev:"rec",area:"Pulizia",title:`Antivirus di terze parti: ${av.join(", ")}`,short:"Defender basta: un secondo antivirus rallenta avvio e giochi.",body:`<p>Microsoft Defender è integrato e sufficiente per l'uso domestico. ${esc(av.join(", "))} aggiunge scansioni in background e popup. Se è una prova preinstallata, disinstallala con lo strumento di rimozione del produttore.</p>`});
+  // Disco
+  const c=a.cVol;
+  if(c){ const fr=c.free/c.gb; if(fr<0.1) add({sev:"crit",area:"Pulizia",title:`Disco C: quasi pieno (${c.free} GB liberi)`,short:"Sotto il 10% Windows e i giochi rallentano.",body:"<p>Libera spazio: Impostazioni › Sistema › Archiviazione › File temporanei, oppure Pulizia disco. Per trovare le cartelle più pesanti usa WizTree o WinDirStat.</p>",cmd:"cleanmgr /d C"}); else if(fr<0.2) add({sev:"opt",area:"Pulizia",title:`Spazio su C: ${c.free} GB liberi su ${c.gb}`,short:"Meno del 20% libero.",body:"<p>Tieni almeno il 15–20% libero per aggiornamenti e cache dei giochi.</p>",cmd:"cleanmgr /d C"}); }
+  if(a.sysType==="HDD") add({sev:"crit",area:"Hardware",title:"Windows è su un hard disk meccanico",short:"È il collo di bottiglia più grande: avvio e caricamenti lentissimi.",body:"<p>Un SSD costa poco e rende il PC 5–10 volte più reattivo. Vedi la sezione Upgrade. Intanto deframmenta il disco una volta al mese.</p>",cmd:"defrag C: /O"});
+  else if(full&&(a.sysType==="SSD"||a.sysType==="NVMe")) add({sev:"opt",area:"Manutenzione",title:"Esegui il TRIM dell'SSD",short:"",body:"<p>Windows lo fa da solo ogni settimana; lanciarlo a mano non fa danni e conferma che funziona.</p>",cmd:"Optimize-Volume -DriveLetter C -ReTrim -Verbose"});
+  (p.disks||[]).forEach(d=>{ if(d.health&&d.health!=="Healthy") add({sev:"crit",area:"Hardware",title:`Disco ${d.name}: stato ${d.health}`,short:"Fai subito un backup.",body:"<p>Windows segnala un problema sul disco. Fai il backup dei dati e controlla con CrystalDiskInfo.</p>"}); });
+  // RAM
+  if(a.ram.sticks.length===1&&!a.ram.soldered) add({sev:"rec",area:"Hardware",title:"RAM in single channel",short:"Un solo modulo: perdi fino al 20–30% di FPS, di più con la grafica integrata.",body:"<p>Aggiungi un secondo modulo identico (stessa capacità e velocità) per attivare il dual channel.</p>"});
+  if(!a.isLap&&a.ram.type==="DDR4"&&a.ram.speed&&a.ram.speed<=2666) add({sev:"rec",area:"Prestazioni",title:`RAM a ${a.ram.speed} MHz: attiva XMP`,short:"Probabilmente le memorie girano alla velocità base.",body:"<p>Entra nel BIOS (tasto Canc o F2 all'avvio) e attiva il profilo XMP (Intel) o DOCP/EXPO (AMD). Gratis, +5–15% di FPS nei giochi limitati dalla CPU.</p>"});
+  if(!a.isLap&&a.ram.type==="DDR5"&&a.ram.speed&&a.ram.speed<=4800) add({sev:"rec",area:"Prestazioni",title:`RAM DDR5 a ${a.ram.speed} MHz: attiva EXPO/XMP`,short:"",body:"<p>Nel BIOS attiva EXPO (AMD) o XMP (Intel) per portare la RAM alla velocità di targa.</p>"});
+  // Secure boot
+  if(p.sys?.secureBoot===false) add({sev:"opt",area:"Sistema",title:"Secure Boot disattivato",short:"Battlefield 6 e gli ultimi Call of Duty non partono senza.",body:`<p>${p.sys.uefi?"Il PC è in modalità UEFI: puoi attivare Secure Boot dal BIOS (sezione Boot/Security).":"Il PC sembra in modalità BIOS legacy: serve prima convertire il disco in GPT (comando mbr2gpt) e passare a UEFI."} Fallo solo se ti servono quei giochi: su alcuni PC vecchi richiede attenzione.</p>`});
+  // BIOS
+  if(p.sys?.biosDate&&yearsSince(p.sys.biosDate)>3) add({sev:"opt",area:"Sistema",title:`BIOS del ${fmtD(p.sys.biosDate)}`,short:"",body:`<p>Controlla sul sito ${esc(p.sys.maker||"del produttore")} se esiste una versione più recente per ${esc(p.sys.model||"il tuo modello")}. ${a.isLap?"Sui portatili di questa età spesso l'ultima versione è già installata.":"Serve anche prima di montare CPU più nuove."} Non spegnere mai il PC durante l'aggiornamento.</p>`});
+  // Uptime
+  if(p.os?.uptimeH>72) add({sev:"opt",area:"Manutenzione",title:`PC acceso da ${Math.round(p.os.uptimeH/24)} giorni`,short:"Riavvia prima di giocare.",body:"<p>Lo spegnimento rapido non svuota davvero la memoria: un riavvio completo libera RAM e chiude processi rimasti appesi.</p>"});
+  // Rete
+  const wifi=(sw.net||[]).filter(n=>n.wifi);
+  if(wifi.length&&!(sw.net||[]).some(n=>!n.wifi&&!/tailscale|virtual|vpn|hyper-v|loopback/i.test(n.n))) add({sev:"opt",area:"Rete",title:"Giochi online in Wi-Fi",short:`${wifi[0].n} a ${wifi[0].speed}.`,body:"<p>Per i giochi online un cavo Ethernet (o un kit powerline) riduce ping e picchi di lag. Se resti in Wi-Fi, usa la banda a 5 GHz e tieni il router vicino.</p>"});
+  // Portatile
+  if(a.isLap){
+    const old=(a.cpu.info.gen&&a.cpu.info.vendor==="intel"&&a.cpu.info.gen<=8)||(p.sys?.biosDate&&yearsSince(p.sys.biosDate)>5);
+    add({sev:old?"rec":"opt",area:"Portatile",title:"Pulizia ventole e pasta termica",short:old?"Su un portatile di questa età è l'intervento con più resa.":"Ogni 2–3 anni.",body:"<p>Polvere e pasta termica secca fanno scendere le frequenze quando il PC si scalda (thermal throttling): si possono perdere il 20–40% di prestazioni. Pulizia con aria compressa e sostituzione della pasta: circa 10 € fai-da-te, 40–60 € in un centro assistenza. Controlla le temperature con HWiNFO: sopra i 90 °C c'è un problema.</p>"});
+    if(p.sys?.batteryHealth&&p.sys.batteryHealth<70) add({sev:"opt",area:"Portatile",title:`Batteria al ${p.sys.batteryHealth}%`,short:"",body:"<p>Una batteria sostitutiva compatibile costa 30–70 €. Per giocare tieni comunque il portatile collegato alla corrente.</p>"});
+    if(p.sys?.battery&&!p.sys.batteryHealth&&full) add({sev:"opt",area:"Portatile",title:"Controlla la salute della batteria",short:"",body:"<p>Genera un report dettagliato con il comando qui sotto (si apre come pagina web nella cartella utente).</p>",cmd:"powercfg /batteryreport /output \"$env:USERPROFILE\\battery-report.html\"; start \"$env:USERPROFILE\\battery-report.html\""});
+  }
+  // GPU debole: upscaling
+  if(a.scores.gpuN!=null&&a.scores.gpuN<40) add({sev:"opt",area:"Prestazioni",title:"Usa upscaling e frame generation",short:"FSR, XeSS o Lossless Scaling danno FPS gratis sulle GPU deboli.",body:"<p>Nei giochi che lo supportano attiva <b>FSR</b> o <b>XeSS</b> in modalità Qualità/Bilanciata: funzionano su quasi tutte le GPU. Per gli altri giochi c'è <b>Lossless Scaling</b> su Steam (circa 7 €): upscaling e generazione di fotogrammi in qualsiasi gioco in finestra. Abbassa anche ombre e qualità volumetrica, che costano molto.</p>"});
+  // Effetti visivi
+  if(a.scores.total!=null&&a.scores.total<35) add({sev:"opt",area:"Prestazioni",title:"Riduci gli effetti visivi di Windows",short:"",body:"<p>Proprietà del sistema › Prestazioni › Regola in modo da ottenere le prestazioni migliori (poi riattiva “Smussa gli angoli dei caratteri”).</p>",cmd:"SystemPropertiesPerformance"});
+  // Integrità sistema
+  if(full) add({sev:"opt",area:"Manutenzione",title:"Controlla l'integrità di Windows",short:"",body:"<p>Se hai crash o errori strani, ripara i file di sistema. Prompt come amministratore, un comando alla volta.</p>",cmds:["DISM /Online /Cleanup-Image /RestoreHealth","sfc /scannow"]});
+  if(!full) add({sev:"opt",area:"Sistema",title:"Esegui la scansione completa per controlli su misura",short:"",body:"<p>Dal browser non si leggono piano energetico, programmi all'avvio, driver, dischi e versione di Windows. La scansione completa attiva oltre 20 controlli specifici.</p>"});
+  const order={crit:0,rec:1,opt:2,ok:3};
+  return L.sort((x,y)=>order[x.sev]-order[y.sev]);
+}
+function cmdBlock(c){ return `<div class="cmd"><code>${esc(c)}</code><button class="btn sm" data-copy="${esc(c)}">Copia</button></div>`; }
+function renderSoft(){
+  const L=buildSoft(A);
+  const cnt={crit:0,rec:0,opt:0,ok:0}; L.forEach(x=>cnt[x.sev]++);
+  const SEV={crit:["bad","Urgente"],rec:["warn","Consigliato"],opt:["info","Facoltativo"],ok:["good","A posto"]};
+  $("#p-soft").innerHTML=`<div class="sec-head"><div class="stack" style="gap:6px"><h2>Ottimizzazioni software</h2><p class="muted small">Controlli fatti sul tuo sistema, in ordine di importanza. I comandi vanno incollati in PowerShell; quelli che modificano il sistema richiedono “Esegui come amministratore”.</p></div>
+   <div class="row">${Object.entries(cnt).filter(([k,v])=>v).map(([k,v])=>`<span class="chip ${SEV[k][0]}">${v} ${SEV[k][1].toLowerCase()}</span>`).join("")}</div></div>
+   <div class="panel"><div class="list">${L.filter(x=>x.sev!=="ok").map(x=>`<div class="item ${x.sev}"><span class="bar"></span><div class="body">
+     <div class="t"><h3>${esc(x.title)}</h3><span class="chip ${SEV[x.sev][0]}">${SEV[x.sev][1]}</span><span class="chip neutral">${x.area}</span></div>
+     ${x.body}${x.cmd?cmdBlock(x.cmd):""}${(x.cmds||[]).map(cmdBlock).join("")}</div></div>`).join("")}</div></div>
+   ${cnt.ok?`<div class="panel"><h3 style="margin-bottom:8px">Già a posto</h3><div class="row">${L.filter(x=>x.sev==="ok").map(x=>`<span class="chip good">✓ ${esc(x.title)}</span>`).join("")}</div></div>`:""}`;
+  $("#nSoft").textContent=cnt.crit+cnt.rec||"";
+}
+
+/* ============ UPGRADE HARDWARE ============ */
+function capFor(cpuN){ return 36000*Math.pow(Math.min(1.3,cpuN*1.3/100),2); }
+function valueLabel(gain,price){ const v=gain/(price/100); return v>=25?["good","Ottima"]:v>=12?["info","Buona"]:v>=5?["warn","Discreta"]:["bad","Bassa"]; }
+function gamesUnlocked(a,g,c){ const now=GAMES.filter(x=>evalGame(x,a,0).playable).length; const then=GAMES.filter(x=>evalGame(x,a,0,{g,c}).playable).length; return [now,then]; }
+function offerCard(o){ const vl=o.gain!=null?valueLabel(o.gain,o.p):null;
+  return `<div class="offer${o.best?" best":""}">${o.best?`<span class="chip accent" style="align-self:start">Consigliato</span>`:""}<h3>${esc(o.n)}</h3>${o.parts?`<p class="small muted">${esc(o.parts)}</p>`:""}
+  <div class="row" style="justify-content:space-between"><span class="price">${fmtE(o.p)}</span>${vl?`<span class="chip ${vl[0]}">Convenienza ${vl[1].toLowerCase()}</span>`:""}</div>
+  <dl class="kv">${o.gain!=null?`<dt>Guadagno</dt><dd>${o.gain>=1000?"×"+(1+o.gain/100).toFixed(0):"+"+Math.round(o.gain)+"%"}</dd>`:""}${o.games?`<dt>Giochi che girano</dt><dd>${o.games[0]} → ${o.games[1]} su ${GAMES.length}</dd>`:""}${(o.kv||[]).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+  ${o.note?`<p class="small">${o.note}</p>`:""}<div class="links">${shop(o.q||o.n.replace(/\(usat[oa]\)/,""),o.used)}</div></div>`; }
+function renderUpg(){
+  const a=A, p=a.p, s=a.scores;
+  if(a.gpuS==null||a.cpu.s==null){ $("#p-upg").innerHTML=`<div class="panel empty">Per i consigli di upgrade servono almeno modello di processore e scheda video. <button class="btn sm" data-go="scan">Completa i dati</button></div>`; return; }
+  const sec=[];
+  const limited=a.type==="laptop"||a.type==="aio"||a.type==="mini";
+  const cpuS=a.cpu.s, gpuS=a.gpuS;
+  const cap=capFor(cpuS);
+  // RAM
+  const ram=[]; const rt=a.ram.type||"DDR4"; const so=limited?" SO-DIMM":"";
+  const maxGB=a.ram.maxGB||(limited?32:128), slots=a.ram.slots||2, used=a.ram.sticks.length;
+  if(a.ram.soldered) ram.push({n:"RAM saldata",p:0,note:"La memoria è saldata sulla scheda: non si può espandere.",info:1});
+  else if(a.ram.gb&&a.ram.gb<16&&maxGB>=16){
+    const k=RAM_BUY[rt]?.k16||RAM_BUY.DDR4.k16;
+    ram.push({n:k.n+so,p:k.p,q:k.n.replace(/Kit /,"")+so,gain:a.ram.gb<=8?25:10,kv:[["Totale dopo","16 GB"],["Compatibile",`${rt}${so}${a.ram.speed?" "+a.ram.speed+" MHz o più":""}`]],note:`${a.ram.gb<=8?"Con 8 GB molti giochi recenti scattano o non partono. ":""}${used<slots?"Puoi anche solo aggiungere un modulo uguale a quello che hai.":"Sostituisci i moduli attuali."}`,used:rt==="DDR3"});
+  }
+  if(used===1&&!a.ram.soldered&&slots>used&&a.ram.sticks[0].gb>=8&&rt!=="DDR3"){ const sg=a.ram.sticks[0].gb; ram.push({n:`1 modulo ${sg} GB ${rt}${so} uguale al tuo`,q:`${sg}GB ${rt}${so} ${a.ram.sticks[0].speed||""}`,p:Math.round((RAM_BUY[rt]?.k32?.p||120)*sg/32),gain:15,best:1,kv:[["Totale dopo",`${sg*2} GB dual channel`],["Modello attuale",`${a.ram.sticks[0].maker||""} ${a.ram.sticks[0].part||""}`.trim()||"—"]],note:"Attiva il dual channel: +10–25% di FPS nei giochi limitati dalla CPU. Meglio stessa marca, capacità e velocità."}); }
+  if(!limited&&a.ram.gb&&a.ram.gb>=16&&a.ram.gb<32&&rt!=="DDR3"&&RAM_BUY[rt]?.k32) ram.push({n:RAM_BUY[rt].k32.n,p:RAM_BUY[rt].k32.p,gain:6,kv:[["Totale dopo","32 GB"]],note:"Utile per giochi pesanti (Flight Simulator, Doom: The Dark Ages, Cities II) e per tenere aperti browser e Discord. Non urgente."});
+  if(a.ram.gb>=16&&a.ram.maxGB&&a.ram.gb>=a.ram.maxGB) ram.push({info:1,n:"RAM al massimo",p:0,note:`Hai già ${a.ram.gb} GB, il massimo supportato dalla scheda madre.`});
+  // Storage
+  const sto=[];
+  const nvmeOk=!limited||(a.cpu.info.gen&&((a.cpu.info.vendor==="intel"&&a.cpu.info.gen>=6)||a.cpu.info.vendor==="amd"));
+  if(a.sysType==="HDD") sto.push({n:nvmeOk?"SSD NVMe 1 TB (PCIe 4.0)":"SSD SATA 2,5\" 1 TB",q:nvmeOk?"SSD NVMe 1TB":"SSD SATA 1TB",p:nvmeOk?90:80,gain:300,best:1,kv:[["Avvio Windows","da 1–2 min a 15 s"]],note:"Il miglior upgrade in assoluto per un PC con hard disk. Clona il disco con Macrium Reflect o reinstalla Windows da zero."});
+  else if(a.cVol&&a.cVol.free/a.cVol.gb<0.25) sto.push({n:nvmeOk&&!(a.sysType==="SSD"&&limited)?"SSD NVMe 2 TB":"SSD SATA 2,5\" 2 TB",q:"SSD 2TB "+(nvmeOk?"NVMe":"SATA"),p:nvmeOk?160:150,note:"Spazio per i giochi moderni, che occupano 70–150 GB l'uno."});
+  else if(a.sysType==="SSD"&&!limited) sto.push({n:"SSD NVMe 1 TB per i giochi",q:"SSD NVMe 1TB",p:90,gain:5,note:"Rispetto al tuo SSD SATA i caricamenti migliorano poco (5–15%). Utile soprattutto come spazio in più. Verifica che la scheda madre abbia uno slot M.2."});
+  const sto2=sto;
+  // GPU (solo fissi)
+  const gpuOffers=[];
+  if(!limited){
+    const curEff=Math.min(gpuS,cap);
+    GPU_BUY.forEach(o=>{
+      const gi=gpuInfo(o.g,false); if(!gi.s||gi.s<gpuS*1.3) return;
+      if(o.rebar&&((a.cpu.info.vendor==="intel"&&(a.cpu.info.gen||0)<10)||(a.cpu.info.vendor==="amd"&&(a.cpu.info.gen||0)<3))) return;
+      const eff=Math.min(gi.s,cap); const gain=(eff/curEff-1)*100; if(gain<25) return;
+      gpuOffers.push({...o,gain,games:gamesUnlocked(a,gi.s,cpuS),kv:[["Alimentatore","≥ "+o.psu+" W"],["Limite CPU",gi.s>cap?"la CPU la frena":"nessuno"]],note:(o.note||"")+(gi.s>cap*1.15?` Con il tuo processore ne sfrutti circa il ${Math.round(cap/gi.s*100)}%.`:"")});
+    });
+    gpuOffers.sort((x,y)=>(y.gain/y.p)-(x.gain/x.p));
+    gpuOffers.splice(4);
+    if(gpuOffers[0]) gpuOffers[0].best=1;
+    gpuOffers.sort((x,y)=>x.p-y.p);
+  }
+  // CPU drop-in
+  const cpuOffers=[]; const plat=a.cpu.info.plat; const pd=plat?CPU_BUY[plat]:null;
+  if(!limited&&pd){
+    pd.cpus.forEach(o=>{ const ns=cpuRef(o.c); if(ns<cpuS+6) return; const newCap=capFor(ns); const gain=(Math.min(gpuS,newCap)/Math.min(gpuS,cap)-1)*100; cpuOffers.push({n:o.n,p:o.p,q:o.c,used:/usat/.test(o.n),gain:Math.max(gain,(ns/cpuS-1)*40),games:gamesUnlocked(a,gpuS,ns),kv:[["Socket",plat],["Indice CPU",`${Math.round(cpuS)} → ${ns}`]]}); });
+  }
+  // Piattaforma
+  const bundles=[];
+  if(!limited&&s.cpuN<60){
+    BUNDLES.forEach(b=>{ if(b.ddr4&&a.ram.type!=="DDR4") return; if(b.ddr4&&(a.ram.gb||0)<16) return; const ns=cpuRef(b.c); const newCap=capFor(ns); const gain=Math.max((Math.min(gpuS,newCap)/Math.min(gpuS,cap)-1)*100,(ns/cpuS-1)*40); bundles.push({...b,gain,games:gamesUnlocked(a,gpuS,ns),q:b.c,kv:[["Indice CPU",`${Math.round(cpuS)} → ${ns}`]]}); });
+  }
+  // Nuovi PC
+  const news=(limited?LAPTOPS.concat(BUILDS):BUILDS).map(b=>{ const gs=gpuInfo(b.g,false).s, cs=cpuRef(b.c); const gain=(Math.min(gs,capFor(cs))/Math.min(gpuS,cap)-1)*100; return {...b,gain,games:gamesUnlocked(a,gs,cs),q:b.parts.split(" · ")[1]||b.n,kv:[["GPU",b.g],["CPU",b.c]]}; });
+
+  // Verdetto
+  let v;
+  const old=s.cpuN<35&&s.gpuN<25;
+  if(limited&&old) v=`<b>Conviene un PC nuovo.</b> Su un ${TYPE_L[a.type].toLowerCase()} processore e scheda video non si cambiano, e i tuoi sono ormai datati (indice CPU ${s.cpuN}, GPU ${s.gpuN}). ${ram.filter(r=>!r.info).length||a.sysType==="HDD"?"RAM e SSD lo rendono più reattivo per l'uso quotidiano, ma non cambiano molto nei giochi.":"Hai già il massimo di RAM e un SSD: gli unici interventi utili sono pulizia e pasta termica."} Per giocare, un PC fisso da circa 950 € offre molte più prestazioni per euro di un portatile.`;
+  else if(limited) v=`<b>Puoi migliorare solo RAM, archiviazione e raffreddamento.</b> Su un ${TYPE_L[a.type].toLowerCase()} CPU e GPU sono saldate. Gli interventi qui sotto allungano la vita al PC; quando non basterà più, guarda i confronti con un PC nuovo.`;
+  else if(a.sysType==="HDD") v=`<b>Prima di tutto un SSD.</b> È l'upgrade più economico e quello che si sente di più. Poi ${a.bottleneck?.what==="cpu"?"la piattaforma (CPU, scheda madre e RAM)":"la scheda video"}.`;
+  else if(s.cpuN<40) v=`<b>Cambia piattaforma prima della scheda video.</b> Con questo processore (indice ${s.cpuN}) una GPU nuova renderebbe meno della metà. Con CPU, scheda madre e RAM nuove puoi poi montare una GPU moderna; il resto (alimentatore, case, dischi) spesso si recupera.`;
+  else if(a.bottleneck?.what==="cpu") v=`<b>Prima il processore.</b> ${pd&&cpuOffers.length?"Il socket della tua scheda madre accetta CPU più veloci: è il modo più economico per sbloccare la GPU.":"Il socket non offre CPU molto più veloci: serve una piattaforma nuova."}`;
+  else v=`<b>Il primo upgrade è la scheda video.</b> Il processore regge${s.cpuN>=70?" anche GPU di fascia alta":" GPU fino a circa "+(cap>=20000?"fascia alta":cap>=10000?"fascia media":"fascia medio-bassa")}. Controlla che l'alimentatore abbia la potenza indicata e i connettori PCIe giusti.`;
+
+  const blk=(t,sub,arr)=>arr.length?`<div class="stack"><div><h3>${t}</h3>${sub?`<p class="small muted">${sub}</p>`:""}</div><div class="offers">${arr.map(o=>o.info?`<div class="offer"><h3>${esc(o.n)}</h3><p class="small">${esc(o.note)}</p></div>`:offerCard(o)).join("")}</div></div>`:"";
+  const brd=p.sys?.board||"";
+  const chipset=(brd.toUpperCase().match(/\b([ABHXZQ]\d{3}[EM]?)\b/)||[])[1];
+  const prebuilt=/^(hp|hewlett|dell|lenovo|acer|asus|medion|fujitsu)/i.test(p.sys?.maker||"")&&!limited;
+  $("#p-upg").innerHTML=`<div class="sec-head"><div class="stack" style="gap:6px"><h2>Upgrade hardware</h2><p class="muted small">${PRICE_NOTE}</p></div></div>
+  <div class="panel stack"><div class="verdict"><p>${v}</p></div>
+   <dl class="kv"><dt>Tipo</dt><dd>${TYPE_L[a.type]}</dd>${brd?`<dt>Scheda madre</dt><dd>${esc(brd)}${chipset?" (chipset "+chipset+")":""}</dd>`:""}${pd?`<dt>Piattaforma</dt><dd>${esc(pd.label)} · RAM ${pd.ram}</dd>`:""}<dt>Limite CPU per la GPU</dt><dd>${limited?"—":"fino a indice "+Math.round(cap).toLocaleString(LOC())+" (circa "+(GPUS.filter(g=>g.kind==="d").sort((x,y)=>Math.abs(x.s-cap)-Math.abs(y.s-cap))[0].n)+")"}</dd></dl>
+   ${pd?.note?`<p class="note">${esc(pd.note)}</p>`:""}${prebuilt?`<p class="note">PC di marca (${esc(p.sys.maker)}): spesso hanno alimentatore poco potente con connettori proprietari e case piccoli. Prima di comprare una GPU controlla la potenza sull'etichetta dell'alimentatore e lo spazio disponibile.</p>`:""}</div>
+  ${blk("Archiviazione",limited?"Sui portatili verifica prima che slot c'è (M.2 2280, 2242, 2230 o vano 2,5\") nel manuale di servizio.":"",sto2)}
+  ${blk("Memoria RAM","",ram)}
+  ${blk("Scheda video","Ordinate per prezzo. Il guadagno tiene conto di quanto il tuo processore riesce a sfruttarle.",gpuOffers)}
+  ${blk("Processore compatibile con la tua scheda madre",pd?`Socket ${plat}: nessun cambio di scheda madre o RAM.`:"",cpuOffers)}
+  ${blk("Nuova piattaforma (CPU + scheda madre + RAM)","Tieni scheda video, alimentatore, case e dischi. Aggiungi circa 30–40 € per un dissipatore se il tuo non è compatibile.",bundles)}
+  ${blk(limited?"Se cambi PC":"PC completo nuovo, per confronto",limited?"Un fisso costa meno a parità di prestazioni; un portatile serve se ti sposti spesso. Prezzi senza monitor.":"Prezzi senza monitor, tastiera e mouse.",news)}
+  ${limited?`<div class="panel stack"><h3>Accessori utili per il portatile</h3><ul><li><b>Base di raffreddamento</b> (20–35 €): abbassa le temperature di 3–8 °C.</li><li><b>Pulizia e pasta termica</b> (10 € fai-da-te, 40–60 € in assistenza).</li><li><b>Cavo Ethernet o adattatore USB-LAN</b> (10–15 €) per giocare online.</li><li><b>eGPU</b>: solo se il portatile ha Thunderbolt 3/4 o USB4; box e GPU partono da circa 400 €, quindi conviene solo su portatili recenti.</li></ul></div>`:""}`;
+}
+
+/* ============ RENDER: SCANSIONE ============ */
+const CPU_LIST=["Intel Core i3-10100F","Intel Core i5-4460","Intel Core i5-6500","Intel Core i5-7400","Intel Core i5-8400","Intel Core i5-9400F","Intel Core i5-10400F","Intel Core i5-11400F","Intel Core i5-12400F","Intel Core i5-13400F","Intel Core i5-14600KF","Intel Core i7-4790","Intel Core i7-6700K","Intel Core i7-8700K","Intel Core i7-9700K","Intel Core i7-10700K","Intel Core i7-12700K","Intel Core i7-13700K","Intel Core i7-14700K","Intel Core i9-12900K","Intel Core i9-13900K","Intel Core i9-14900K","Intel Core Ultra 5 245K","Intel Core Ultra 7 265K","Intel Core Ultra 9 285K","Intel Core i5-1135G7","Intel Core i5-1235U","Intel Core i7-1165G7","Intel Core i7-12700H","Intel Core i7-13700H","Intel Core i7-14700HX","Intel Core Ultra 7 155H","Intel Core Ultra 7 258V","AMD Ryzen 5 1600","AMD Ryzen 5 2600","AMD Ryzen 5 3600","AMD Ryzen 5 5600","AMD Ryzen 5 5600X","AMD Ryzen 7 5700X3D","AMD Ryzen 7 5800X3D","AMD Ryzen 5 7600","AMD Ryzen 7 7800X3D","AMD Ryzen 5 9600X","AMD Ryzen 7 9800X3D","AMD Ryzen 9 7950X","AMD Ryzen 5 5500U","AMD Ryzen 7 5800H","AMD Ryzen 7 6800H","AMD Ryzen 7 7840HS","AMD Ryzen 7 8845HS","AMD Ryzen AI 9 HX 370"];
+function renderScan(){
+  const ps=$("#ps-src").textContent.trim();
+  const a=A;
+  $("#p-scan").innerHTML=`<div class="sec-head"><div class="stack" style="gap:6px"><h2>Scansione</h2><p class="muted small">Per sicurezza nessun sito può leggere modello della CPU, tipo e velocità della RAM, dischi e scheda madre. Lo fa un piccolo script PowerShell che <b>legge soltanto</b>: non installa e non modifica niente. Alla fine apre RigScore con i risultati nel link: i dati vengono elaborati solo nel tuo browser e non vengono inviati a nessun server.</p></div></div>
+  <div class="panel stack"><h3>Cosa ho rilevato finora</h3><dl class="kv">
+   <dt>Fonte</dt><dd>${a.p.source==="scan"?"scansione completa del "+new Date(a.p.t).toLocaleString(LOC(),{dateStyle:"short",timeStyle:"short"}):"browser (scansione rapida)"}</dd>
+   <dt>Processore</dt><dd>${esc(a.cpu.name||(a.bench?"modello sconosciuto, benchmark "+a.bench.pts.toLocaleString(LOC())+" pt":"—"))}</dd>
+   <dt>Scheda video</dt><dd>${esc(a.gpu.name)}</dd>
+   <dt>RAM</dt><dd>${a.ram.gb?(a.ram.approx?"≈ ":"")+a.ram.gb+" GB"+(a.ram.type?" "+a.ram.type:""):"—"}</dd>
+   <dt>Disco</dt><dd>${a.sysType?a.sysType:(a.p.diskEstGB?"≈ "+a.p.diskEstGB+" GB, tipo sconosciuto":"—")}</dd>
+   <dt>Tipo di PC</dt><dd>${TYPE_L[a.type]}</dd></dl></div>
+  <div class="panel stack" style="border-color:var(--accent)">
+   <div><h3>Scansione con un clic</h3><p class="small muted">Per sicurezza una pagina web non può aprire PowerShell da sola. Il pulsante usa un link <span class="mono">rigscore://</span> registrato sul tuo PC, come fanno i link <span class="mono">steam://</span> o <span class="mono">discord://</span>.</p></div>
+   <div class="steps">
+    <div class="step"><span class="num">OGNI VOLTA</span><h3>Avvia la scansione</h3><a class="btn primary" id="runScan" href="rigscore://scan" target="_blank" rel="noopener" style="align-self:start;text-decoration:none">Avvia scansione</a><p class="note">Il browser chiede “Aprire RigScore?”: conferma (e spunta “Consenti sempre”). PowerShell legge le specifiche e apre RigScore con i risultati. Puoi anche usare l'icona <b>RigScore</b> sul Desktop.</p></div>
+    <div class="step"><span class="num">SOLO LA PRIMA VOLTA</span><h3>Installa il pulsante</h3>${cmdBlock(INST_CMD)}<p class="note">Incolla questa riga in PowerShell (<kbd>Win</kbd>+<kbd>X</kbd> › Windows PowerShell) e premi <kbd>Invio</kbd>. Non servono permessi di amministratore: salva lo script in <span class="mono">%LOCALAPPDATA%\\RigScore</span>, registra il link, crea l'icona sul Desktop e fa subito la prima scansione.</p><details><summary class="small">Per rimuoverlo</summary>${cmdBlock("Remove-Item 'HKCU:\\Software\\Classes\\rigscore' -Recurse; Remove-Item \"$env:LOCALAPPDATA\\RigScore\" -Recurse; Remove-Item \"$([Environment]::GetFolderPath('Desktop'))\\RigScore.lnk\"")}</details></div>
+   </div>
+  </div>
+  <div class="panel stack">
+   <div class="steps">
+    <div class="step" style="grid-column:1/-1"><h3>Senza installare niente</h3><p class="small muted">Una riga in PowerShell: legge le specifiche e apre RigScore con i risultati.</p></div>
+    <div class="step"><span class="num">PASSO 1</span><h3>Copia il comando</h3>${cmdBlock(SCAN_CMD)}<p class="note">Scarica ed esegue lo script dal sito di RigScore. Puoi leggerlo prima: <a href="${SITE}scan.ps1" target="_blank" rel="noopener">scan.ps1</a>.</p></div>
+    <div class="step"><span class="num">PASSO 2</span><h3>Incollalo in PowerShell</h3><p class="small">Premi <kbd>Win</kbd>+<kbd>X</kbd> e scegli <b>Windows PowerShell</b> o <b>Terminale</b>. Incolla con clic destro o <kbd>Ctrl</kbd>+<kbd>V</kbd> e premi <kbd>Invio</kbd>. Dopo 10–30 secondi si apre RigScore con i risultati.</p><p class="note">Aprendo PowerShell “come amministratore” leggo anche TPM, usura dei dischi e salute della batteria.</p></div>
+    <div class="step"><span class="num">SE NON SI APRE</span><h3>Premi Ctrl+V su questa pagina</h3><p class="note">Il risultato è anche negli appunti: premi <kbd>Ctrl</kbd>+<kbd>V</kbd> in un punto qualsiasi, oppure incollalo qui sotto.</p><textarea id="scanIn" rows="3" placeholder="PCSCAN1:eyJ2Ijox…"></textarea><div class="row"><button class="btn primary" id="scanGo">Analizza</button><span class="small" id="scanMsg" role="status"></span></div></div>
+   </div>
+   <details><summary class="small">Mostra lo script (${ps.split("\n").length} righe, solo lettura)</summary><textarea id="psText" rows="12" readonly style="margin-top:8px">${esc(ps)}</textarea></details>
+  </div>
+  <div class="panel stack">
+   <div><h3>Correggi o completa a mano</h3><p class="small muted">Utile dopo la scansione rapida o se un componente non viene riconosciuto. I campi vuoti usano il valore rilevato.</p></div>
+   <div class="form">
+    <label class="f">Tipo di PC<select id="ovType"><option value="auto">Automatico (${TYPE_L[a.p.type]||"?"})</option><option value="desktop">PC fisso</option><option value="laptop">Portatile</option><option value="aio">All-in-one</option><option value="mini">Mini PC</option></select></label>
+    <label class="f">Processore<input type="text" id="ovCpu" list="dlCpu" placeholder="${esc(a.p.cpu?.name||"es. Intel Core i5-12400F")}"></label>
+    <label class="f">Scheda video<input type="text" id="ovGpu" list="dlGpu" placeholder="${esc(a.p.gpus?.[0]?.name||"es. RTX 3060")}"></label>
+    <label class="f">RAM (GB)<input type="number" id="ovRam" min="1" max="512" placeholder="${a.ram.gb||"16"}"></label>
+    <label class="f">Disco di sistema<select id="ovDisk"><option value="">Automatico${a.sysType&&!OV.disk?" ("+a.sysType+")":""}</option><option value="NVMe">SSD NVMe</option><option value="SSD">SSD SATA</option><option value="HDD">Hard disk</option></select></label>
+    <label class="f">Windows<select id="ovOs"><option value="">Automatico</option><option value="Windows 11">Windows 11 aggiornato</option><option value="Windows 10">Windows 10 (Home/Pro)</option></select></label>
+   </div>
+   <datalist id="dlCpu">${CPU_LIST.map(c=>`<option value="${c}">`).join("")}</datalist>
+   <datalist id="dlGpu">${GPUS.slice().sort((x,y)=>y.s-x.s).map(g=>`<option value="${g.n}">`).join("")}</datalist>
+   <div class="row"><button class="btn primary" id="ovApply">Applica</button><button class="btn" id="ovReset">Togli correzioni</button><button class="btn" id="rescan">Rifai la scansione rapida</button></div>
+   ${a.p.source==="browser"&&a.p.evidence?.length?`<p class="note">Indizi raccolti dal browser: ${esc(a.p.evidence.join(", "))}.</p>`:""}
+   ${a.p.source==="browser"&&a.p.gpus?.[0]?.raw?`<p class="note mono">WebGL: ${esc(a.p.gpus[0].raw)}</p>`:""}
+  </div>
+  
+  <p class="note">I dati restano in questo browser (memoria locale della pagina). Lo script è leggibile qui sopra: legge informazioni di sistema tramite WMI e registro e usa Set-Clipboard per copiare il risultato.</p>`;
+  $("#ovType").value=OV.type||"auto"; $("#ovCpu").value=OV.cpu||""; $("#ovGpu").value=OV.gpu||""; $("#ovRam").value=OV.ram||""; $("#ovDisk").value=OV.disk||""; $("#ovOs").value=OV.os||"";
+}
+
+/* ============ CONTROLLO ============ */
+const SITE="%%SITE%%";
+const SCAN_CMD=`irm ${SITE}scan.ps1 | iex`;
+const INST_CMD=`irm ${SITE}install.ps1 | iex`;
+function recompute(){ A=analyze(P); renderOver(); renderGames(); renderSoft(); renderUpg(); renderScan(); $("#srcLabel").textContent=P.source==="scan"?"scansione completa":"scansione rapida"; }
+function setTab(t){ UI.tab=t; document.querySelectorAll('[role="tab"]').forEach(b=>b.setAttribute("aria-selected",b.id==="t-"+t)); document.querySelectorAll('[role="tabpanel"]').forEach(s=>s.hidden=s.id!=="p-"+t); store.set("rigscore.tab",t); window.scrollTo({top:0}); }
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button,[data-go]"); if(!t) return;
+  if(t.getAttribute("role")==="tab") return setTab(t.id.slice(2));
+  if(t.dataset.go) return setTab(t.dataset.go);
+  if(t.dataset.copy!==undefined){ const ok=await copyText(t.dataset.copy); toast(ok?"Comando copiato":"Copia non riuscita: seleziona il testo a mano"); return; }
+  if(t.dataset.res!==undefined){ UI.res=+t.dataset.res; renderGames(); return; }
+  if(t.dataset.only){ UI.only=t.dataset.only; renderGames(); return; }
+  if(t.id==="scanGo"){ const msg=$("#scanMsg"); try{ await importText($("#scanIn").value); }catch(err){ msg.textContent=trS(err.message.startsWith("Il testo")?err.message:"Codice incompleto o danneggiato: ricopialo dal PowerShell per intero."); msg.style.color="var(--bad)"; } return; }
+  if(t.id==="ovApply"){ OV={type:$("#ovType").value,cpu:$("#ovCpu").value.trim(),gpu:$("#ovGpu").value.trim(),ram:$("#ovRam").value,disk:$("#ovDisk").value,os:$("#ovOs").value}; Object.keys(OV).forEach(k=>{if(!OV[k]||OV[k]==="auto") delete OV[k]}); store.set("rigscore.ov",OV); recompute(); toast("Correzioni applicate"); return; }
+  if(t.id==="ovReset"){ OV={}; store.del("rigscore.ov"); recompute(); toast("Correzioni rimosse"); return; }
+  if(t.id==="rescan"){ store.del("rigscore.profile"); toast("Benchmark in corso…"); await new Promise(r=>setTimeout(r,50)); BENCH=cpuBench(300); P=await browserScan(); recompute(); toast("Scansione rapida aggiornata"); return; }
+});
+document.addEventListener("input",e=>{ if(e.target.id==="gq"){ UI.q=e.target.value; const pos=e.target.selectionStart; renderGames(); const el=$("#gq"); el.focus(); try{el.setSelectionRange(pos,pos)}catch(_){} } });
+document.addEventListener("change",e=>{ if(e.target.id==="gsort"){ UI.sort=e.target.value; renderGames(); } });
+let HASHINFO="nessuna";
+async function importHash(){
+  const h=location.hash||""; HASHINFO=h?h.length+" caratteri":"nessuna";
+  if(!/PCSCAN/.test(h)) return false;
+  try{ P=await decodeScan(h.slice(1)); store.set("rigscore.profile",P); try{ history.replaceState(null,"",location.pathname+location.search); }catch(_){} return true; }
+  catch(e){ return false; }
+}
+async function importText(txt){ P=await decodeScan(txt); store.set("rigscore.profile",P); recompute(); setTab("over"); const w=$("#waitBar"); if(w) w.hidden=true; toast("Scansione completa caricata"); }
+document.addEventListener("paste",async e=>{
+  const txt=(e.clipboardData||window.clipboardData)?.getData("text")||"";
+  if(!/PCSCAN/.test(txt)) return;
+  e.preventDefault();
+  try{ await importText(txt); }catch(err){ toast("Codice incompleto: rifai la scansione"); }
+});
+document.addEventListener("click",e=>{ if(e.target.closest("#runScan")){ const w=$("#waitBar"); if(w) w.hidden=false; if(window.top===window){ e.preventDefault(); location.href="rigscore://scan"; } } },true);
+window.addEventListener("storage",e=>{ if(e.key==="rigscore.profile"&&e.newValue){ try{ P=JSON.parse(e.newValue); recompute(); const w=$("#waitBar"); if(w) w.hidden=true; toast("Scansione completa caricata"); }catch(_){} } });
+window.addEventListener("hashchange",async()=>{ if(await importHash()){ recompute(); setTab("over"); toast("Scansione completa caricata"); } });
+(async function start(){
+  initPrefs();
+  const fromLink=await importHash();
+  const saved=store.get("rigscore.profile");
+  if(!fromLink) P=saved&&saved.source==="scan"?saved:await browserScan();
+  recompute();
+  const tab=store.get("rigscore.tab"); setTab(fromLink?"over":(tab&&document.getElementById("t-"+tab)?tab:"over"));
+  if(fromLink) toast("Scansione completa caricata");
+  setTimeout(()=>{ try{ if(document.hidden) return; BENCH=cpuBench(300); recompute(); }catch(e){} },400);
+})();
+</script>

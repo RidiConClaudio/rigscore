@@ -1,0 +1,4 @@
+# Local-only files
+bancopc.html
+*.cmd
+_chrome*/
