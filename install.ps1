@@ -14,6 +14,6 @@ $w = New-Object -ComObject WScript.Shell
 $l = $w.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Desktop')) 'RigScore.lnk'))
 $l.TargetPath = 'powershell.exe'; $l.Arguments = $a; $l.IconLocation = 'shell32.dll,15'; $l.Description = 'Scansione RigScore'; $l.Save()
 Write-Host ''
-Write-Host '  RigScore installato: pulsante "Avvia scansione" e icona RigScore sul Desktop.' -ForegroundColor Green
+if ((Get-Culture).TwoLetterISOLanguageName -eq 'it') { Write-Host '  RigScore installato: pulsante "Avvia scansione" e icona RigScore sul Desktop.' -ForegroundColor Green } else { Write-Host '  RigScore installed: "Start scan" button and RigScore icon on the Desktop.' -ForegroundColor Green }
 & $f
 }

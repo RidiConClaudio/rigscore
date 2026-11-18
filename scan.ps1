@@ -1,7 +1,8 @@
 & {
 $ErrorActionPreference = 'SilentlyContinue'
+$it = (Get-Culture).TwoLetterISOLanguageName -eq 'it'
 Write-Host ''
-Write-Host '  RigScore: lettura delle specifiche in corso (10-30 secondi)...' -ForegroundColor Cyan
+Write-Host $(if ($it) { '  RigScore: lettura delle specifiche in corso (10-30 secondi)...' } else { '  RigScore: reading your PC specs (10-30 seconds)...' }) -ForegroundColor Cyan
 function S($v) { if ($null -eq $v) { $null } else { ("$v" -replace "`0", '').Trim() } }
 $o = [ordered]@{ v = 2; t = (Get-Date).ToString('s') }
 $cs = Get-CimInstance Win32_ComputerSystem
@@ -107,8 +108,8 @@ $code = 'PCSCAN2:' + [Convert]::ToBase64String($ms.ToArray()).TrimEnd('=').Repla
 Set-Clipboard -Value $code
 Start-Process ('https://ridiconclaudio.github.io/rigscore/#' + $code)
 Write-Host ''
-Write-Host '  Fatto: si apre RigScore con i risultati.' -ForegroundColor Green
-Write-Host '  Se non si apre: il codice e'' negli appunti, premi CTRL+V sulla pagina di RigScore.' -ForegroundColor Green
+Write-Host $(if ($it) { '  Fatto: si apre RigScore con i risultati.' } else { '  Done: RigScore is opening with your results.' }) -ForegroundColor Green
+Write-Host $(if ($it) { '  Se non si apre: il codice e'' negli appunti, premi CTRL+V sulla pagina di RigScore.' } else { '  If it does not open: the code is on your clipboard, press CTRL+V on the RigScore page.' }) -ForegroundColor Green
 Write-Host ''
 Start-Sleep -Seconds 6
 }

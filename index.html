@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="RigScore: analizza il tuo PC, stima come girano i giochi e suggerisce ottimizzazioni e upgrade con prezzi.">
+<meta name="description" content="RigScore: scan your PC, see how games will run, and get software tweaks and hardware upgrade advice with prices.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='1.5' y='1.5' width='25' height='25' rx='6' fill='%23161B22' stroke='%23FF7B3A' stroke-width='2'/%3E%3Cpath d='M6 18 L10 12 L14 15 L18 8 L22 11' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px;font-family:system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>RigScore</title>
@@ -47,6 +47,8 @@ nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
 nav.tabs button{font:500 14px var(--f-body);color:var(--muted);background:none;border:1px solid transparent;border-radius:8px;padding:7px 12px;cursor:pointer}
 nav.tabs button:hover{color:var(--ink);background:var(--sunken)}
 nav.tabs button[aria-selected="true"]{color:var(--ink);background:var(--sunken);border-color:var(--line)}
+.prefs{display:flex;gap:6px}
+.prefs select{width:auto;padding:5px 8px;font-size:13px}
 nav.tabs button .n{font-family:var(--f-mono);font-size:11px;color:var(--accent);margin-left:6px}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{padding-block:24px 64px}
@@ -180,6 +182,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--sunken);border:1px
       <button role="tab" id="t-upg" aria-controls="p-upg" aria-selected="false">Upgrade</button>
       <button role="tab" id="t-scan" aria-controls="p-scan" aria-selected="false">Scansione</button>
     </nav>
+    <div class="prefs"><select id="langSel" aria-label="Lingua"><option value="it">Italiano</option><option value="en">English</option></select><select id="regSel" aria-label="Paese"></select></div>
   </div>
 </header>
 
@@ -194,8 +197,9 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--sunken);border:1px
 
 <script type="text/plain" id="ps-src">& {
 $ErrorActionPreference = 'SilentlyContinue'
+$it = (Get-Culture).TwoLetterISOLanguageName -eq 'it'
 Write-Host ''
-Write-Host '  RigScore: lettura delle specifiche in corso (10-30 secondi)...' -ForegroundColor Cyan
+Write-Host $(if ($it) { '  RigScore: lettura delle specifiche in corso (10-30 secondi)...' } else { '  RigScore: reading your PC specs (10-30 seconds)...' }) -ForegroundColor Cyan
 function S($v) { if ($null -eq $v) { $null } else { ("$v" -replace "`0", '').Trim() } }
 $o = [ordered]@{ v = 2; t = (Get-Date).ToString('s') }
 $cs = Get-CimInstance Win32_ComputerSystem
@@ -301,8 +305,8 @@ $code = 'PCSCAN2:' + [Convert]::ToBase64String($ms.ToArray()).TrimEnd('=').Repla
 Set-Clipboard -Value $code
 Start-Process ('https://ridiconclaudio.github.io/rigscore/#' + $code)
 Write-Host ''
-Write-Host '  Fatto: si apre RigScore con i risultati.' -ForegroundColor Green
-Write-Host '  Se non si apre: il codice e'' negli appunti, premi CTRL+V sulla pagina di RigScore.' -ForegroundColor Green
+Write-Host $(if ($it) { '  Fatto: si apre RigScore con i risultati.' } else { '  Done: RigScore is opening with your results.' }) -ForegroundColor Green
+Write-Host $(if ($it) { '  Se non si apre: il codice e'' negli appunti, premi CTRL+V sulla pagina di RigScore.' } else { '  If it does not open: the code is on your clipboard, press CTRL+V on the RigScore page.' }) -ForegroundColor Green
 Write-Host ''
 Start-Sleep -Seconds 6
 }</script>
@@ -322,7 +326,7 @@ $w = New-Object -ComObject WScript.Shell
 $l = $w.CreateShortcut((Join-Path ([Environment]::GetFolderPath('Desktop')) 'RigScore.lnk'))
 $l.TargetPath = 'powershell.exe'; $l.Arguments = $a; $l.IconLocation = 'shell32.dll,15'; $l.Description = 'Scansione RigScore'; $l.Save()
 Write-Host ''
-Write-Host '  RigScore installato: pulsante "Avvia scansione" e icona RigScore sul Desktop.' -ForegroundColor Green
+if ((Get-Culture).TwoLetterISOLanguageName -eq 'it') { Write-Host '  RigScore installato: pulsante "Avvia scansione" e icona RigScore sul Desktop.' -ForegroundColor Green } else { Write-Host '  RigScore installed: "Start scan" button and RigScore icon on the Desktop.' -ForegroundColor Green }
 & $f
 }</script>
 <script>
@@ -663,7 +667,7 @@ const GAMES=[
 GAMES.forEach(g=>{g.gMin=gpuRef(g.gmin);g.gRec=gpuRef(g.grec);g.cMin=cpuRef(g.cmin);g.cRec=cpuRef(g.crec);});
 
 /* ============ DATI: ACQUISTI (stime metà 2026, euro) ============ */
-const PRICE_NOTE="Prezzi indicativi in euro (stime di metà 2026). RAM e SSD sono rincarati molto tra fine 2025 e 2026: controlla sempre il prezzo del giorno con i link.";
+const PRICE_NOTE="Prezzi indicativi (stime di metà 2026). RAM e SSD sono rincarati molto tra fine 2025 e 2026: controlla sempre il prezzo del giorno con i link.";
 const GPU_BUY=[
  {n:"AMD RX 6600 8 GB (usata)",g:"RX 6600",p:150,psu:450,used:1,note:"La scelta più economica per giocare in 1080p."},
  {n:"NVIDIA RTX 3060 12 GB (usata)",g:"RTX 3060",p:190,psu:550,used:1,note:"12 GB di VRAM, DLSS. Buona da usata."},
@@ -708,15 +712,315 @@ const LAPTOPS=[
 ];
 const RAM_BUY={DDR3:{k16:{n:"2 × 8 GB DDR3 (usata)",p:30}},DDR4:{k16:{n:"Kit 2 × 8 GB DDR4-3200",p:70},k32:{n:"Kit 2 × 16 GB DDR4-3200",p:120}},DDR5:{k32:{n:"Kit 2 × 16 GB DDR5-6000",p:280},k16:{n:"Kit 2 × 8 GB DDR5-5600",p:150}}};
 
+/* ============ LINGUA E PAESE ============ */
+/* Dizionario IT -> EN, applicato ai nodi di testo dopo ogni render. Ordinato per lunghezza a runtime. */
+const EN_PAIRS=[
+/* header, barra attesa */
+["Scansione in corso in PowerShell.","Scan running in PowerShell."],
+[" Se il browser chiede “Aprire RigScore?”, conferma. Alla fine RigScore si aggiorna con i risultati; se non succede, premi "," If the browser asks “Open RigScore?”, confirm. RigScore then updates with the results; if it doesn't, press "],
+[" qui."," here."],
+["scansione completa","full scan"],["scansione rapida","quick scan"],
+["Scansione completa","Full scan"],["Scansione rapida","Quick scan"],
+["Panoramica","Overview"],["Ottimizza","Optimize"],["Scansione","Scan"],["Giochi","Games"],
+/* panoramica */
+["Analisi parziale dal browser.","Partial analysis from the browser."],
+[" Ho rilevato da solo scheda video, thread, RAM approssimativa e velocità della CPU (benchmark). Per sicurezza nessun sito può leggere modello della CPU, tipo di RAM, dischi e scheda madre. La scansione completa li legge in 30 secondi: un clic o un comando, poi RigScore si apre con i risultati."," I detected the graphics card, threads, approximate RAM and CPU speed (benchmark) on my own. For security reasons no website can read the CPU model, RAM type, drives or motherboard. The full scan reads them in 30 seconds: one click or one command, then RigScore opens with the results."],
+["Fai la scansione completa","Run the full scan"],
+["Punteggio gaming","Gaming score"],
+["Fascia medio-alta","Upper mid-range"],["Fascia minima","Bottom tier"],["Fascia alta","High-end"],["Fascia media","Mid-range"],["Fascia base","Entry level"],
+["Tipo da confermare","Type to confirm"],["PC fisso","Desktop PC"],["Portatile","Laptop"],["portatile","laptop"],["pc fisso","desktop PC"],
+["Giochi che girano","Games that run"],["Fluidi in 1080p","Smooth at 1080p"],["Benchmark CPU misurato","Measured CPU benchmark"],
+["Il tuo PC","Your PC"],["rilevato ","detected "],
+["Processore","Processor"],["Scheda video","Graphics card"],["Memoria RAM","Memory (RAM)"],["Archiviazione","Storage"],["Sistema","System"],["Scheda madre","Motherboard"],["Schermo","Display"],["Rete","Network"],["Batteria","Battery"],
+["Modello non leggibile dal browser: misurato col benchmark","Model not readable by the browser: measured with the benchmark"],["Modello non letto","Model not read"],
+["thread logici","logical threads"],[" core / "," cores / "],[" GHz base"," GHz base"],["punti","points"],["dell'atteso","of expected"],["modello non in archivio, punteggio stimato","model not in database, estimated score"],["modello non in archivio","model not in database"],
+["dedicata per portatile","dedicated (laptop)"],["integrata","integrated"],["dedicata","dedicated"],["ray tracing sì","ray tracing: yes"],["ray tracing no","ray tracing: no"],["versione per portatile (stima)","laptop version (estimate)"],["anche: ","also: "],
+["8 GB o più","8 GB or more"],["Da indicare","Not set"],["slot occupati","slots used"],
+["Il browser non mostra oltre 8 GB: indica il valore in Scansione","The browser can't show more than 8 GB: enter the value in Scan"],
+["Valore arrotondato dal browser. Tipo (DDR3/4/5), velocità e slot si leggono con la scansione completa.","Value rounded by the browser. Type (DDR3/4/5), speed and slots are read by the full scan."],
+["GB liberi su","GB free of"],["STATO: ","STATUS: "],["usura ","wear "],
+["Disco di sistema: ","System drive: "],["Hard disk meccanico","Mechanical hard disk"],
+["Disco di sistema da circa ","System drive of about "],[" GB (stima dal browser). Il tipo di disco si legge solo con la scansione completa."," GB (browser estimate). The drive type is only read by the full scan."],
+["Il browser non può leggere i dischi","The browser can't read drives"],
+["supporto terminato il ","support ended on "],["supportato fino al ","supported until "],["installato ","installed "],
+["Windows 11 (versione esatta non leggibile dal browser)","Windows 11 (exact version not readable by the browser)"],
+["Windows 10 o 11: il browser non distingue edizione e versione","Windows 10 or 11: the browser can't tell edition and version"],
+["Non supportato","Unsupported"],["In scadenza","Ending soon"],["Supportato","Supported"],["Da verificare","To check"],["Sconosciuto","Unknown"],
+["scheda ","board "],["BIOS legacy","Legacy BIOS"],["Secure Boot attivo","Secure Boot on"],["Secure Boot spento","Secure Boot off"],["TPM: serve PowerShell come amministratore","TPM: needs PowerShell as administrator"],
+["60 Hz: un monitor a 144 Hz rende i giochi molto più fluidi","60 Hz: a 144 Hz monitor makes games much smoother"],
+["Cavo","Cable"],["Salute ","Health "],["Presente","Present"],["capacità attuale rispetto a quella di fabbrica","current capacity compared to factory capacity"],["salute leggibile solo con PowerShell come amministratore","health readable only with PowerShell as administrator"],
+["Usurata","Worn"],["Calata","Degraded"],
+["Equilibrio dei componenti","Component balance"],["Servono modello di CPU e GPU per valutarlo.","CPU and GPU models are needed to assess it."],
+["Il processore frena la scheda video: nei giochi la GPU non viene sfruttata del tutto (CPU ","The processor holds back the graphics card: in games the GPU isn't fully used (CPU "],
+[" contro GPU "," vs GPU "],[" contro CPU "," vs CPU "],
+["La scheda video è il limite principale (GPU ","The graphics card is the main limit (GPU "],
+["): è il primo componente da aggiornare per giocare meglio.","): it's the first part to upgrade for better gaming."],
+["Processore e scheda video sono ben bilanciati.","Processor and graphics card are well balanced."],
+
+["Indici 0–100. 100 sulla scheda video corrisponde a una RTX 4090; 100 sul processore a un Ryzen 7 9800X3D.","Indexes 0–100. 100 for the graphics card equals an RTX 4090; 100 for the processor equals a Ryzen 7 9800X3D."],
+["Da fare per primo","Do this first"],["Vedi tutte le ottimizzazioni","See all optimizations"],["Nessun intervento urgente trovato.","No urgent fixes found."],
+["da completare","incomplete"],["Ottimo","Excellent"],["Buono","Good"],["Sufficiente","Fair"],["Datato","Outdated"],["Buona","Good"],
+/* giochi */
+["Per stimare i giochi servono modello di processore e scheda video. ","Game estimates need the processor and graphics card models. "],["Completa i dati","Complete the data"],
+["Come girano i giochi","How games run"],
+["Percentuale = quanto il tuo PC copre i requisiti del gioco: 40% = requisiti minimi, 70% = consigliati, 100% = ampio margine per i dettagli al massimo. Gli FPS sono una stima a ","Percentage = how well your PC meets the game's requirements: 40% = minimum, 70% = recommended, 100% = plenty of headroom for max settings. FPS are estimated at "],
+[" con il preset indicato."," with the preset shown."],["Media a ","Average at "],
+["Cerca un gioco","Search a game"],["Tutti","All"],["Girano","Run"],["Non girano","Don't run"],["Ordina","Sort"],["Per percentuale","By percentage"],["Per nome","By name"],["Più recenti","Newest"],
+["Consigliati: ","Recommended: "],
+["Bloccato finché non attivi Secure Boot.","Blocked until you enable Secure Boot."],
+["CPU sotto il minimo","CPU below minimum"],["servono ","needs "],[" GB di RAM"," GB of RAM"],["(consigliati ","(recommended "],["richiede una GPU con ray tracing","requires a ray tracing GPU"],["Secure Boot disattivato","Secure Boot disabled"],["consigliato SSD","SSD recommended"],
+["Su Windows 11 l'anti-cheat Vanguard richiede TPM 2.0 e Secure Boot.","On Windows 11 the Vanguard anti-cheat requires TPM 2.0 and Secure Boot."],
+["I Call of Duty più recenti richiedono TPM 2.0 e Secure Boot attivi.","Recent Call of Duty games require TPM 2.0 and Secure Boot enabled."],
+["Richiede Secure Boot attivo (anti-cheat Javelin).","Requires Secure Boot enabled (Javelin anti-cheat)."],
+["Indiana Jones e l'Antico Cerchio","Indiana Jones and the Great Circle"],
+["Incompatibile","Incompatible"],["Fluido","Smooth"],["Al minimo","Minimum"],["Non gira","Won't run"],["Medio","Medium"],["Alto","High"],["Basso","Low"],
+["limite ","limit "],["Nessun gioco corrisponde.","No game matches."],
+["Requisiti dalle schede ufficiali dei giochi, semplificati. Le stime non contano driver, temperature e patch: possono variare del 20–30%.","Requirements from the official game pages, simplified. Estimates ignore drivers, temperatures and patches: they can vary by 20–30%."],
+/* ottimizzazioni */
+["Ottimizzazioni software","Software optimizations"],
+["Controlli fatti sul tuo sistema, in ordine di importanza. I comandi vanno incollati in PowerShell; quelli che modificano il sistema richiedono “Esegui come amministratore”.","Checks run on your system, in order of importance. Paste the commands into PowerShell; those that change the system need “Run as administrator”."],
+["urgente","urgent"],["consigliato","recommended"],["facoltativo","optional"],["a posto","OK"],["Urgente","Urgent"],["Consigliato","Recommended"],["Facoltativo","Optional"],["Già a posto","Already fine"],
+["Prestazioni","Performance"],["Pulizia","Cleanup"],["Manutenzione","Maintenance"],
+["Copia","Copy"],
+[": supporto terminato",": support ended"],["Niente più aggiornamenti di sicurezza.","No more security updates."],
+["Il tuo Windows non riceve più patch di sicurezza","Your Windows no longer receives security patches"],
+[" (anche il programma ESU per Windows 10 è terminato il 13 ottobre 2026)"," (the Windows 10 ESU program also ended on October 13, 2026)"],
+["Il processore è compatibile con Windows 11: aggiorna da Impostazioni › Windows Update o con l'Assistente all'installazione di Windows 11.","Your processor is compatible with Windows 11: upgrade from Settings › Windows Update or with the Windows 11 Installation Assistant."],
+["Il processore non è nella lista ufficiale di Windows 11. Alternative: Windows 11 IoT Enterprise LTSC 2024 (supportato fino al 2034, licenza aziendale) oppure una distribuzione Linux per giocare come Bazzite o Linux Mint con Steam/Proton (attenzione: i giochi con anti-cheat a livello kernel come Valorant, Fortnite e Battlefield non funzionano su Linux).","Your processor isn't on the official Windows 11 list. Alternatives: Windows 11 IoT Enterprise LTSC 2024 (supported until 2034, business license) or a gaming Linux distribution such as Bazzite or Linux Mint with Steam/Proton (note: games with kernel-level anti-cheat like Valorant, Fortnite and Battlefield don't work on Linux)."],
+[": supporto in scadenza",": support ending soon"],["Scade il ","Ends on "],["Il supporto termina il ","Support ends on "],[". Pianifica l'aggiornamento alla versione successiva da Windows Update.",". Plan the upgrade to the next version from Windows Update."],
+[": supportato",": supported"],["Supporto fino al ","Supported until "],
+[" LTSC non ha Microsoft Store né app Xbox: i giochi di Game Pass per PC e alcuni titoli dello Store non si installano senza aggiungerli a mano."," LTSC has no Microsoft Store or Xbox app: PC Game Pass games and some Store titles won't install unless you add them manually."],
+[": GPU fuori supporto",": GPU out of support"],["Driver del ","Driver from "],["Hai il driver del ","You have the driver from "],["versione ","version "],
+["Questa GPU (","This GPU ("],[") non riceve più driver nuovi. ",") no longer gets new drivers. "],
+["Il tuo driver è più vecchio dell'ultima versione legacy: scaricala dal sito Intel cercando il modello della GPU (sezione driver legacy) oppure tramite Windows Update › Aggiornamenti facoltativi.","Your driver is older than the last legacy release: download it from Intel's site by searching the GPU model (legacy drivers section) or via Windows Update › Optional updates."],
+["Hai già l'ultimo driver uscito per questa GPU: niente da fare.","You already have the last driver released for this GPU: nothing to do."],
+["Installa l'ultima versione legacy dal sito del produttore.","Install the last legacy version from the manufacturer's site."],
+["Aggiorna il driver di ","Update the driver for "],[": i nuovi giochi richiedono driver recenti.",": new games need recent drivers."],
+[". I driver recenti correggono crash e migliorano le prestazioni nei giochi nuovi, a volte del 5–15%.",". Recent drivers fix crashes and improve performance in new games, sometimes by 5–15%."],
+["Scarica l'","Download the "],["app NVIDIA","NVIDIA app"],["Scarica ","Download "],["Usa l'","Use the "],["assistente driver Intel","Intel Driver & Support Assistant"],
+[" Per un'installazione pulita puoi usare DDU (Display Driver Uninstaller) in modalità provvisoria."," For a clean install you can use DDU (Display Driver Uninstaller) in Safe Mode."],
+[" aggiornato"," up to date"],
+["Fai usare ai giochi la ","Make games use the "],["Con due GPU Windows a volte avvia i giochi sulla grafica integrata.","With two GPUs Windows sometimes runs games on the integrated graphics."],
+["Il PC ha una grafica integrata e una dedicata. Apri Impostazioni › Sistema › Schermo › Grafica, aggiungi l'eseguibile del gioco e scegli ","This PC has integrated and dedicated graphics. Open Settings › System › Display › Graphics, add the game's executable and choose "],
+["Prestazioni elevate","High performance"],
+[" In alternativa: Pannello di controllo NVIDIA › Gestisci impostazioni 3D › Processore grafico preferito › Processore NVIDIA ad alte prestazioni."," Alternatively: NVIDIA Control Panel › Manage 3D settings › Preferred graphics processor › High-performance NVIDIA processor."],
+[" Tieni il portatile collegato alla corrente mentre giochi."," Keep the laptop plugged in while gaming."],
+["Piano energetico: ","Power plan: "],["Già impostato per le massime prestazioni.","Already set for maximum performance."],
+["Attiva il piano energetico Prestazioni elevate","Switch to the High performance power plan"],["Ora è attivo “","Currently active: “"],
+["Il piano “","The “"],["” abbassa le frequenze per risparmiare. ","” plan lowers clock speeds to save power. "],
+["Sul portatile usalo solo collegato alla corrente; in Windows 11 scegli anche Modalità risparmio energia › Prestazioni ottimali.","On a laptop use it only when plugged in; on Windows 11 also set Power mode › Best performance."],
+["Sul PC fisso puoi attivare anche il piano Prestazioni eccellenti (primo comando, poi selezionalo in Opzioni risparmio energia).","On a desktop you can also enable the Ultimate Performance plan (first command, then select it in Power Options)."],
+["La CPU rende il ","The CPU delivers "],["% del previsto","% of expected"],["Possibile surriscaldamento, risparmio energetico o processi in background.","Possible overheating, power saving or background processes."],
+["Il benchmark nel browser ha misurato ","The browser benchmark measured "],[" punti, mentre un "," points, while a "],[" dovrebbe farne circa "," should score about "],[". Cause tipiche: ",". Typical causes: "],
+["portatile a batteria (collegalo alla corrente), ","laptop on battery (plug it in), "],
+["piano energetico a risparmio, ventole impolverate o pasta termica secca, programmi pesanti aperti. Chiudi il resto, ripeti la scansione rapida dalla scheda Scansione e, se il risultato resta basso, controlla le temperature con HWiNFO.","power-saving plan, dusty fans or dried thermal paste, heavy programs open. Close everything else, repeat the quick scan from the Scan tab and, if the result stays low, check temperatures with HWiNFO."],
+["Il benchmark gira nel browser: varia di circa ±10% tra Chrome, Edge e Firefox.","The benchmark runs in the browser: it varies by about ±10% between Chrome, Edge and Firefox."],
+["CPU al ","CPU at "],["% delle prestazioni attese","% of expected performance"],["Nessun segno di rallentamenti.","No sign of slowdowns."],
+["Attiva la Modalità gioco","Turn on Game Mode"],["È disattivata.","It's off."],["Dà priorità al gioco e blocca gli aggiornamenti di Windows durante le sessioni.","Prioritizes the game and blocks Windows updates during sessions."],
+["Modalità gioco attiva","Game Mode on"],["Nulla da fare.","Nothing to do."],
+["Attiva la pianificazione GPU con accelerazione hardware","Turn on hardware-accelerated GPU scheduling"],["Riduce la latenza, richiesta dal frame generation DLSS 3.","Reduces latency; required by DLSS 3 frame generation."],
+["Impostazioni › Sistema › Schermo › Grafica › Modifica impostazioni grafiche predefinite › Pianificazione GPU con accelerazione hardware. Riavvia dopo averla attivata.","Settings › System › Display › Graphics › Change default graphics settings › Hardware-accelerated GPU scheduling. Restart after turning it on."],
+["Pianificazione GPU hardware attiva","Hardware GPU scheduling on"],
+["Integrità della memoria (VBS) attiva","Memory integrity (VBS) on"],["Costa il 5–10% di FPS in alcuni giochi.","Costs 5–10% FPS in some games."],
+["È una protezione utile. Se vuoi le massime prestazioni puoi disattivarla da Sicurezza di Windows › Sicurezza dispositivi › Isolamento core › Integrità della memoria. Scelta consapevole: riduce la protezione contro alcuni attacchi ai driver.","It's a useful protection. For maximum performance you can turn it off in Windows Security › Device security › Core isolation › Memory integrity. Make it an informed choice: it reduces protection against some driver attacks."],
+[" programmi partono all'avvio"," programs start with Windows"],["Da valutare: ","Worth reviewing: "],
+["Ognuno occupa RAM e CPU in background. Disattiva quelli che non ti servono subito: ","Each one uses RAM and CPU in the background. Disable the ones you don't need right away: "],
+[" › Avvio (Windows 10) o App di avvio (Windows 11) › Disabilita."," › Startup (Windows 10) or Startup apps (Windows 11) › Disable."],["Maiusc","Shift"],
+["In grassetto quelli che di solito si possono disattivare senza problemi.","In bold: the ones that can usually be disabled safely."],
+["Rimuovi app superflue (","Remove unneeded apps ("],[" trovate)"," found)"],["Debloat di Windows","Windows debloat"],
+["LTSC è già snello: basta un ritocco a telemetria e servizi.","LTSC is already lean: just tweak telemetry and services."],["Trovate: ","Found: "],["Nessuna app inutile evidente.","No obvious unneeded apps."],
+["Hai già usato ","You've already used "],[": riaprilo dopo i grandi aggiornamenti di Windows, che a volte reinstallano le app rimosse.",": run it again after major Windows updates, which sometimes reinstall removed apps."],
+["La tua edizione LTSC non ha Store, Copilot, app preinstallate e pubblicità: un debloat aggressivo serve a poco. Puoi comunque ridurre telemetria e servizi in background.","Your LTSC edition has no Store, Copilot, preinstalled apps or ads: aggressive debloating does little. You can still reduce telemetry and background services."],
+["Strumenti affidabili e open source, da avviare in PowerShell come amministratore:","Reliable open-source tools, to run in PowerShell as administrator:"],
+[" di Chris Titus: debloat, impostazioni consigliate e installazione programmi."," by Chris Titus: debloat, recommended tweaks and app installs."],
+[" di Raphire: rimuove app, pubblicità, Copilot e suggerimenti (funziona anche su Windows 10)."," by Raphire: removes apps, ads, Copilot and suggestions (works on Windows 10 too)."],
+[": interruttori per privacy e telemetria, con interfaccia grafica.",": switches for privacy and telemetry, with a graphical interface."],
+["Prima crea un punto di ripristino (primo comando). Evita gli “ottimizzatori” a pagamento tipo IObit o CCleaner: non migliorano gli FPS.","Create a restore point first (first command). Avoid paid “optimizers” like IObit or CCleaner: they don't improve FPS."],
+["Antivirus di terze parti: ","Third-party antivirus: "],["Defender basta: un secondo antivirus rallenta avvio e giochi.","Defender is enough: a second antivirus slows down startup and games."],
+["Microsoft Defender è integrato e sufficiente per l'uso domestico. ","Microsoft Defender is built in and enough for home use. "],
+[" aggiunge scansioni in background e popup. Se è una prova preinstallata, disinstallala con lo strumento di rimozione del produttore."," adds background scans and popups. If it's a preinstalled trial, uninstall it with the vendor's removal tool."],
+["Disco C: quasi pieno (","Drive C: almost full ("],[" GB liberi)"," GB free)"],["Sotto il 10% Windows e i giochi rallentano.","Below 10% Windows and games slow down."],
+["Libera spazio: Impostazioni › Sistema › Archiviazione › File temporanei, oppure Pulizia disco. Per trovare le cartelle più pesanti usa WizTree o WinDirStat.","Free up space: Settings › System › Storage › Temporary files, or Disk Cleanup. To find the biggest folders use WizTree or WinDirStat."],
+["Spazio su C: ","Space on C: "],[" GB liberi su "," GB free of "],["Meno del 20% libero.","Less than 20% free."],["Tieni almeno il 15–20% libero per aggiornamenti e cache dei giochi.","Keep at least 15–20% free for updates and game caches."],
+["Windows è su un hard disk meccanico","Windows is on a mechanical hard disk"],["È il collo di bottiglia più grande: avvio e caricamenti lentissimi.","It's the biggest bottleneck: very slow boot and loading."],
+["Un SSD costa poco e rende il PC 5–10 volte più reattivo. Vedi la sezione Upgrade. Intanto deframmenta il disco una volta al mese.","An SSD is cheap and makes the PC 5–10 times more responsive. See the Upgrade section. Meanwhile, defragment the disk once a month."],
+["Esegui il TRIM dell'SSD","Run TRIM on the SSD"],["Windows lo fa da solo ogni settimana; lanciarlo a mano non fa danni e conferma che funziona.","Windows does it weekly on its own; running it manually is harmless and confirms it works."],
+[": stato ",": status "],["Fai subito un backup.","Back up right away."],["Windows segnala un problema sul disco. Fai il backup dei dati e controlla con CrystalDiskInfo.","Windows reports a problem with the drive. Back up your data and check it with CrystalDiskInfo."],
+["RAM in single channel","RAM in single channel"],["Un solo modulo: perdi fino al 20–30% di FPS, di più con la grafica integrata.","Only one module: you lose up to 20–30% FPS, more with integrated graphics."],
+["Aggiungi un secondo modulo identico (stessa capacità e velocità) per attivare il dual channel.","Add a second identical module (same capacity and speed) to enable dual channel."],
+[" MHz: attiva XMP"," MHz: enable XMP"],["RAM a ","RAM at "],["RAM DDR5 a ","DDR5 RAM at "],[" MHz: attiva EXPO/XMP"," MHz: enable EXPO/XMP"],
+["Probabilmente le memorie girano alla velocità base.","Your memory is probably running at base speed."],
+["Entra nel BIOS (tasto Canc o F2 all'avvio) e attiva il profilo XMP (Intel) o DOCP/EXPO (AMD). Gratis, +5–15% di FPS nei giochi limitati dalla CPU.","Enter the BIOS (Del or F2 at boot) and enable the XMP (Intel) or DOCP/EXPO (AMD) profile. Free, +5–15% FPS in CPU-bound games."],
+["Nel BIOS attiva EXPO (AMD) o XMP (Intel) per portare la RAM alla velocità di targa.","In the BIOS enable EXPO (AMD) or XMP (Intel) to run the RAM at its rated speed."],
+["Battlefield 6 e gli ultimi Call of Duty non partono senza.","Battlefield 6 and recent Call of Duty games won't start without it."],
+["Il PC è in modalità UEFI: puoi attivare Secure Boot dal BIOS (sezione Boot/Security).","The PC is in UEFI mode: you can enable Secure Boot in the BIOS (Boot/Security section)."],
+["Il PC sembra in modalità BIOS legacy: serve prima convertire il disco in GPT (comando mbr2gpt) e passare a UEFI.","The PC seems to be in legacy BIOS mode: first convert the disk to GPT (mbr2gpt command) and switch to UEFI."],
+[" Fallo solo se ti servono quei giochi: su alcuni PC vecchi richiede attenzione."," Do it only if you need those games: on some older PCs it needs care."],
+["BIOS del ","BIOS from "],["Controlla sul sito ","Check on the "],[" se esiste una versione più recente per "," website whether there's a newer version for "],["del produttore","manufacturer's"],["il tuo modello","your model"],
+["Sui portatili di questa età spesso l'ultima versione è già installata.","On laptops this old the latest version is often already installed."],["Serve anche prima di montare CPU più nuove.","It's also needed before installing newer CPUs."],
+[" Non spegnere mai il PC durante l'aggiornamento."," Never turn off the PC during the update."],
+["PC acceso da ","PC on for "],[" giorni"," days"],["Riavvia prima di giocare.","Restart before gaming."],["Lo spegnimento rapido non svuota davvero la memoria: un riavvio completo libera RAM e chiude processi rimasti appesi.","Fast startup doesn't really clear memory: a full restart frees RAM and closes stuck processes."],
+["Giochi online in Wi-Fi","Online gaming over Wi-Fi"],
+["Per i giochi online un cavo Ethernet (o un kit powerline) riduce ping e picchi di lag. Se resti in Wi-Fi, usa la banda a 5 GHz e tieni il router vicino.","For online gaming an Ethernet cable (or a powerline kit) reduces ping and lag spikes. If you stay on Wi-Fi, use the 5 GHz band and keep the router close."],
+["Pulizia ventole e pasta termica","Clean the fans and replace thermal paste"],["Su un portatile di questa età è l'intervento con più resa.","On a laptop this old it's the most effective fix."],["Ogni 2–3 anni.","Every 2–3 years."],
+["Polvere e pasta termica secca fanno scendere le frequenze quando il PC si scalda (thermal throttling): si possono perdere il 20–40% di prestazioni. Pulizia con aria compressa e sostituzione della pasta: circa 10 € fai-da-te, 40–60 € in un centro assistenza. Controlla le temperature con HWiNFO: sopra i 90 °C c'è un problema.","Dust and dried thermal paste lower clock speeds when the PC heats up (thermal throttling): you can lose 20–40% performance. Compressed-air cleaning and new paste: about €10 DIY, €40–60 at a repair shop. Check temperatures with HWiNFO: above 90 °C there's a problem."],
+["Batteria al ","Battery at "],["Una batteria sostitutiva compatibile costa 30–70 €. Per giocare tieni comunque il portatile collegato alla corrente.","A compatible replacement battery costs €30–70. For gaming keep the laptop plugged in anyway."],
+["Controlla la salute della batteria","Check battery health"],["Genera un report dettagliato con il comando qui sotto (si apre come pagina web nella cartella utente).","Generate a detailed report with the command below (it opens as a web page from your user folder)."],
+["Usa upscaling e frame generation","Use upscaling and frame generation"],["FSR, XeSS o Lossless Scaling danno FPS gratis sulle GPU deboli.","FSR, XeSS or Lossless Scaling give free FPS on weak GPUs."],
+["Nei giochi che lo supportano attiva ","In games that support it, enable "],[" in modalità Qualità/Bilanciata: funzionano su quasi tutte le GPU. Per gli altri giochi c'è "," in Quality/Balanced mode: they work on almost any GPU. For other games there's "],
+[" su Steam (circa 7 €): upscaling e generazione di fotogrammi in qualsiasi gioco in finestra. Abbassa anche ombre e qualità volumetrica, che costano molto."," on Steam (about €7): upscaling and frame generation in any windowed game. Also lower shadows and volumetric quality, which are expensive."],
+["Riduci gli effetti visivi di Windows","Reduce Windows visual effects"],["Proprietà del sistema › Prestazioni › Regola in modo da ottenere le prestazioni migliori (poi riattiva “Smussa gli angoli dei caratteri”).","System Properties › Performance › Adjust for best performance (then re-enable “Smooth edges of screen fonts”)."],
+["Controlla l'integrità di Windows","Check Windows integrity"],["Se hai crash o errori strani, ripara i file di sistema. Prompt come amministratore, un comando alla volta.","If you get crashes or odd errors, repair system files. Prompt as administrator, one command at a time."],
+["Esegui la scansione completa per controlli su misura","Run the full scan for tailored checks"],["Dal browser non si leggono piano energetico, programmi all'avvio, driver, dischi e versione di Windows. La scansione completa attiva oltre 20 controlli specifici.","The browser can't read the power plan, startup programs, drivers, drives or Windows version. The full scan enables 20+ specific checks."],
+/* upgrade */
+["Per i consigli di upgrade servono almeno modello di processore e scheda video. ","Upgrade advice needs at least the processor and graphics card models. "],
+["Upgrade hardware","Hardware upgrades"],
+["Prezzi indicativi (stime di metà 2026). RAM e SSD sono rincarati molto tra fine 2025 e 2026: controlla sempre il prezzo del giorno con i link.","Indicative prices (mid-2026 estimates). RAM and SSD prices rose sharply between late 2025 and 2026: always check today's price with the links."],
+["Convenienza ottima","Excellent value"],["Convenienza buona","Good value"],["Convenienza discreta","Fair value"],["Convenienza bassa","Poor value"],
+["Guadagno","Gain"],["Alimentatore","Power supply"],["Limite CPU per la GPU","CPU limit for the GPU"],["Limite CPU","CPU limit"],["la CPU la frena","held back by the CPU"],["nessuno","none"],["Indice CPU","CPU index"],
+["Totale dopo","Total after"],["Compatibile","Compatible"],[" MHz o più"," MHz or faster"],["Modello attuale","Current model"],["Avvio Windows","Windows boot"],["da 1–2 min a 15 s","from 1–2 min to 15 s"],
+["Tipo","Type"],["Piattaforma","Platform"],["fino a indice ","up to index "],[" (circa "," (about "],
+["RAM saldata","Soldered RAM"],["La memoria è saldata sulla scheda: non si può espandere.","The memory is soldered to the board: it can't be expanded."],
+["Con 8 GB molti giochi recenti scattano o non partono. ","With 8 GB many recent games stutter or won't start. "],["Puoi anche solo aggiungere un modulo uguale a quello che hai.","You can also just add a module identical to yours."],["Sostituisci i moduli attuali.","Replace the current modules."],
+["1 modulo ","1 module "],[" uguale al tuo"," matching yours"],["Attiva il dual channel: +10–25% di FPS nei giochi limitati dalla CPU. Meglio stessa marca, capacità e velocità.","Enables dual channel: +10–25% FPS in CPU-bound games. Best with the same brand, capacity and speed."],
+["Utile per giochi pesanti (Flight Simulator, Doom: The Dark Ages, Cities II) e per tenere aperti browser e Discord. Non urgente.","Useful for heavy games (Flight Simulator, Doom: The Dark Ages, Cities II) and for keeping a browser and Discord open. Not urgent."],
+["RAM al massimo","RAM maxed out"],["Hai già ","You already have "],[" GB, il massimo supportato dalla scheda madre."," GB, the maximum your motherboard supports."],
+["SSD NVMe 1 TB per i giochi","1 TB NVMe SSD for games"],
+["Il miglior upgrade in assoluto per un PC con hard disk. Clona il disco con Macrium Reflect o reinstalla Windows da zero.","The best upgrade by far for a PC with a hard disk. Clone the disk with Macrium Reflect or reinstall Windows from scratch."],
+["Spazio per i giochi moderni, che occupano 70–150 GB l'uno.","Room for modern games, which take 70–150 GB each."],
+["Rispetto al tuo SSD SATA i caricamenti migliorano poco (5–15%). Utile soprattutto come spazio in più. Verifica che la scheda madre abbia uno slot M.2.","Compared to your SATA SSD, loading improves only a little (5–15%). Mostly useful as extra space. Check that your motherboard has an M.2 slot."],
+[" Con il tuo processore ne sfrutti circa il "," With your processor you'd use about "],
+["La scelta più economica per giocare in 1080p.","The cheapest way to game at 1080p."],["12 GB di VRAM, DLSS. Buona da usata.","12 GB VRAM, DLSS. A good used buy."],["Ottimo rapporto prezzo/prestazioni. Serve Resizable BAR attivo.","Great price/performance. Needs Resizable BAR enabled."],
+["DLSS 4 e frame generation. 8 GB di VRAM stanno stretti nei giochi pesanti.","DLSS 4 and frame generation. 8 GB of VRAM is tight in heavy games."],["16 GB di VRAM: la scelta più longeva in fascia media.","16 GB VRAM: the most future-proof mid-range pick."],["Ottima per il 1440p.","Great for 1440p."],
+["(usata)","(used)"],["(usato)","(used)"],
+["Piattaforma di oltre 10 anni: conviene solo un ritocco a costo quasi zero.","A 10+ year old platform: only a near-free tweak makes sense."],
+["Piattaforma molto vecchia: il salto vero richiede scheda madre e RAM nuove.","A very old platform: a real jump needs a new motherboard and RAM."],
+["Le schede 100/200 non accettano le CPU di 8ª–9ª gen.","100/200-series boards don't accept 8th–9th gen CPUs."],
+["Le schede B460/H410 non supportano l'11ª gen: lì scegli un i7-10700F (circa 150 €).","B460/H410 boards don't support 11th gen: pick an i7-10700F there (about €150)."],
+["Per 13ª/14ª gen aggiorna prima il BIOS (microcodice 0x12B o successivo).","For 13th/14th gen update the BIOS first (microcode 0x12B or later)."],
+["Prima del cambio aggiorna il BIOS. Sulle schede A320/B350/X370 verifica che il produttore supporti i Ryzen 5000.","Update the BIOS before swapping. On A320/B350/X370 boards check that the vendor supports Ryzen 5000."],
+["Nessun upgrade sensato: serve una piattaforma nuova.","No sensible upgrade: you need a new platform."],
+["(2ª–3ª gen, 2011–2013)","(2nd–3rd gen, 2011–2013)"],["(4ª gen, 2013–2014)","(4th gen, 2013–2014)"],["(6ª–7ª gen)","(6th–7th gen)"],["(8ª–9ª gen)","(8th–9th gen)"],["(10ª–11ª gen)","(10th–11th gen)"],["(12ª–14ª gen)","(12th–14th gen)"],
+["AMD AM4 con la tua DDR4","AMD AM4 with your DDR4"],["Intel con la tua DDR4","Intel with your DDR4"],["AM5 essenziale","AM5 essential"],
+["scheda madre","motherboard"],["(riusi la RAM DDR4)","(reuse your DDR4 RAM)"],
+["PC fisso 4K / alto refresh","4K / high-refresh desktop"],["Portatile gaming base","Entry gaming laptop"],["Portatile gaming medio","Mid-range gaming laptop"],["Portatile gaming alto","High-end gaming laptop"],[" recente"," (recent)"],
+["Conviene un PC nuovo.","A new PC is the better deal."],
+[" Su un "," On a "],[" processore e scheda video non si cambiano, e i tuoi sono ormai datati (indice CPU "," the processor and graphics card can't be replaced, and yours are now outdated (CPU index "],
+["RAM e SSD lo rendono più reattivo per l'uso quotidiano, ma non cambiano molto nei giochi.","RAM and SSD make it snappier for everyday use, but don't change much in games."],
+["Hai già il massimo di RAM e un SSD: gli unici interventi utili sono pulizia e pasta termica.","You already have maximum RAM and an SSD: the only useful fixes are cleaning and thermal paste."],
+[" Per giocare, un PC fisso da circa 950 € offre molte più prestazioni per euro di un portatile."," For gaming, a desktop PC of about €950 gives far more performance per euro than a laptop."],
+["Puoi migliorare solo RAM, archiviazione e raffreddamento.","You can only improve RAM, storage and cooling."],
+[" CPU e GPU sono saldate. Gli interventi qui sotto allungano la vita al PC; quando non basterà più, guarda i confronti con un PC nuovo."," CPU and GPU are soldered. The fixes below extend the PC's life; when that's no longer enough, see the comparison with a new PC."],
+["Prima di tutto un SSD.","An SSD first."],[" È l'upgrade più economico e quello che si sente di più. Poi "," It's the cheapest upgrade and the one you'll notice most. Then "],
+["la piattaforma (CPU, scheda madre e RAM)","the platform (CPU, motherboard and RAM)"],["la scheda video","the graphics card"],
+["Cambia piattaforma prima della scheda video.","Change platform before the graphics card."],[" Con questo processore (indice "," With this processor (index "],
+[") una GPU nuova renderebbe meno della metà. Con CPU, scheda madre e RAM nuove puoi poi montare una GPU moderna; il resto (alimentatore, case, dischi) spesso si recupera.",") a new GPU would deliver less than half its potential. With a new CPU, motherboard and RAM you can then add a modern GPU; the rest (power supply, case, drives) can often be reused."],
+["Prima il processore.","The processor first."],["Il socket della tua scheda madre accetta CPU più veloci: è il modo più economico per sbloccare la GPU.","Your motherboard socket accepts faster CPUs: it's the cheapest way to unleash the GPU."],["Il socket non offre CPU molto più veloci: serve una piattaforma nuova.","The socket offers no much faster CPUs: you need a new platform."],
+["Il primo upgrade è la scheda video.","The first upgrade is the graphics card."],[" Il processore regge"," The processor can handle"],[" anche GPU di fascia alta"," even high-end GPUs"],[" GPU fino a circa "," GPUs up to about "],["fascia medio-bassa","lower mid-range"],["fascia alta","high-end"],["fascia media","mid-range"],
+[". Controlla che l'alimentatore abbia la potenza indicata e i connettori PCIe giusti.",". Check that your power supply has the listed wattage and the right PCIe connectors."],
+["PC di marca (","Branded PC ("],["): spesso hanno alimentatore poco potente con connettori proprietari e case piccoli. Prima di comprare una GPU controlla la potenza sull'etichetta dell'alimentatore e lo spazio disponibile.","): these often have a weak power supply with proprietary connectors and a small case. Before buying a GPU check the wattage on the PSU label and the available space."],
+["Sui portatili verifica prima che slot c'è (M.2 2280, 2242, 2230 o vano 2,5\") nel manuale di servizio.","On laptops first check which slot you have (M.2 2280, 2242, 2230 or 2.5\" bay) in the service manual."],
+["Ordinate per prezzo. Il guadagno tiene conto di quanto il tuo processore riesce a sfruttarle.","Sorted by price. The gain accounts for how much your processor can use them."],
+["Processore compatibile con la tua scheda madre","Processor compatible with your motherboard"],[": nessun cambio di scheda madre o RAM.",": no motherboard or RAM change."],
+["Nuova piattaforma (CPU + scheda madre + RAM)","New platform (CPU + motherboard + RAM)"],["Tieni scheda video, alimentatore, case e dischi. Aggiungi circa 30–40 € per un dissipatore se il tuo non è compatibile.","Keep the graphics card, power supply, case and drives. Add about €30–40 for a cooler if yours isn't compatible."],
+["Se cambi PC","If you change PC"],["PC completo nuovo, per confronto","New complete PC, for comparison"],
+["Un fisso costa meno a parità di prestazioni; un portatile serve se ti sposti spesso. Prezzi senza monitor.","A desktop costs less for the same performance; a laptop makes sense if you travel often. Prices without monitor."],
+["Prezzi senza monitor, tastiera e mouse.","Prices without monitor, keyboard and mouse."],
+["Accessori utili per il portatile","Useful laptop accessories"],["Base di raffreddamento","Cooling pad"],[": abbassa le temperature di 3–8 °C.",": lowers temperatures by 3–8 °C."],
+["Pulizia e pasta termica","Cleaning and thermal paste"],[" (10 € fai-da-te, 40–60 € in assistenza)."," (€10 DIY, €40–60 at a shop)."],
+["Cavo Ethernet o adattatore USB-LAN","Ethernet cable or USB-LAN adapter"],[" per giocare online."," for online gaming."],
+[": solo se il portatile ha Thunderbolt 3/4 o USB4; box e GPU partono da circa 400 €, quindi conviene solo su portatili recenti.",": only if the laptop has Thunderbolt 3/4 or USB4; enclosure and GPU start at about €400, so it only makes sense on recent laptops."],
+["Usato","Used"],
+/* scansione */
+["Per sicurezza nessun sito può leggere modello della CPU, tipo e velocità della RAM, dischi e scheda madre. Lo fa un piccolo script PowerShell che ","For security reasons no website can read the CPU model, RAM type and speed, drives and motherboard. A small PowerShell script does it, and it "],
+["legge soltanto","only reads"],
+[": non installa e non modifica niente. Alla fine apre RigScore con i risultati nel link: i dati vengono elaborati solo nel tuo browser e non vengono inviati a nessun server.",": it installs and changes nothing. At the end it opens RigScore with the results in the link: the data is processed only in your browser and never sent to any server."],
+["Cosa ho rilevato finora","What I've detected so far"],["Fonte","Source"],["scansione completa del ","full scan from "],["browser (scansione rapida)","browser (quick scan)"],["modello sconosciuto, benchmark ","unknown model, benchmark "],[", tipo sconosciuto",", unknown type"],["Tipo di PC","PC type"],
+["Scansione con un clic","One-click scan"],
+["Per sicurezza una pagina web non può aprire PowerShell da sola. Il pulsante usa un link ","For security a web page can't open PowerShell by itself. The button uses a "],[" registrato sul tuo PC, come fanno i link "," link registered on your PC, just like "],[" o "," or "],
+["OGNI VOLTA","EVERY TIME"],["Avvia la scansione","Start the scan"],["Avvia scansione","Start scan"],
+["Il browser chiede “Aprire RigScore?”: conferma (e spunta “Consenti sempre”). PowerShell legge le specifiche e apre RigScore con i risultati. Puoi anche usare l'icona ","The browser asks “Open RigScore?”: confirm (and tick “Always allow”). PowerShell reads the specs and opens RigScore with the results. You can also use the "],[" sul Desktop."," icon on the Desktop."],
+["SOLO LA PRIMA VOLTA","FIRST TIME ONLY"],["Installa il pulsante","Install the button"],
+["Incolla questa riga in PowerShell (","Paste this line into PowerShell ("],["Premi ","Press "],[") e premi ",") and press "],["Invio","Enter"],
+[". Non servono permessi di amministratore: salva lo script in ",". No admin rights needed: it saves the script in "],[", registra il link, crea l'icona sul Desktop e fa subito la prima scansione.",", registers the link, creates the Desktop icon and runs the first scan right away."],
+["Per rimuoverlo","To remove it"],
+["Senza installare niente","Without installing anything"],["Una riga in PowerShell: legge le specifiche e apre RigScore con i risultati.","One line in PowerShell: it reads the specs and opens RigScore with the results."],
+["PASSO 1","STEP 1"],["PASSO 2","STEP 2"],["Copia il comando","Copy the command"],["Scarica ed esegue lo script dal sito di RigScore. Puoi leggerlo prima: ","Downloads and runs the script from the RigScore site. You can read it first: "],
+["Incollalo in PowerShell","Paste it into PowerShell"],[" e scegli "," and choose "],[" o "," or "],["Terminale","Terminal"],[". Incolla con clic destro o ",". Paste with right-click or "],
+[". Dopo 10–30 secondi si apre RigScore con i risultati.",". After 10–30 seconds RigScore opens with the results."],
+["Aprendo PowerShell “come amministratore” leggo anche TPM, usura dei dischi e salute della batteria.","If you open PowerShell “as administrator” I also read TPM, drive wear and battery health."],
+["SE NON SI APRE","IF IT DOESN'T OPEN"],["Premi Ctrl+V su questa pagina","Press Ctrl+V on this page"],
+["Il risultato è anche negli appunti: premi ","The result is also on the clipboard: press "],[" in un punto qualsiasi, oppure incollalo qui sotto."," anywhere, or paste it below."],
+["Analizza","Analyze"],["Mostra lo script (","Show the script ("],[" righe, solo lettura)"," lines, read-only)"],
+["Correggi o completa a mano","Correct or complete manually"],["Utile dopo la scansione rapida o se un componente non viene riconosciuto. I campi vuoti usano il valore rilevato.","Useful after the quick scan or if a part isn't recognized. Empty fields use the detected value."],
+["Automatico","Automatic"],["Disco di sistema","System drive"],["Windows 11 aggiornato","Windows 11 up to date"],
+["Applica","Apply"],["Togli correzioni","Clear corrections"],["Rifai la scansione rapida","Redo the quick scan"],
+["Indizi raccolti dal browser: ","Clues gathered by the browser: "],["batteria rilevata","battery detected"],["GPU per portatili","laptop GPU"],["grafica integrata tipica dei portatili","integrated graphics typical of laptops"],["schermo touch","touch screen"],
+["I dati restano in questo browser (memoria locale della pagina). Lo script è leggibile qui sopra: legge informazioni di sistema tramite WMI e registro e usa Set-Clipboard per copiare il risultato.","Data stays in this browser (the page's local storage). The script is readable above: it reads system information via WMI and the registry and uses Set-Clipboard to copy the result."],
+["Non rilevata","Not detected"],
+/* messaggi */
+["Comando copiato","Command copied"],["Copia non riuscita: seleziona il testo a mano","Copy failed: select the text manually"],
+["Il testo incollato non contiene un codice RigScore. Deve iniziare con PCSCAN.","The pasted text doesn't contain a RigScore code. It must start with PCSCAN."],
+["Questo browser non sa decomprimere il codice: usa Chrome, Edge o Firefox aggiornati.","This browser can't decompress the code: use an up-to-date Chrome, Edge or Firefox."],
+["Codice incompleto o danneggiato: ricopialo dal PowerShell per intero.","Incomplete or damaged code: copy it again from PowerShell in full."],
+["Codice incompleto: rifai la scansione","Incomplete code: run the scan again"],
+["Correzioni applicate","Corrections applied"],["Correzioni rimosse","Corrections cleared"],["Benchmark in corso…","Benchmark running…"],["Scansione rapida aggiornata","Quick scan updated"],["Scansione completa caricata","Full scan loaded"],
+/* attributi */
+["Sezioni","Sections"],["Risoluzione","Resolution"],["Filtro","Filter"],["es. Cyberpunk","e.g. Cyberpunk"],["es. Intel Core","e.g. Intel Core"],["es. RTX","e.g. RTX"],[" su 100"," out of 100"],["Punteggio ","Score "],["non disponibile","not available"],
+[" e premi "," and press "],[" su "," of "],[" thread ·"," threads ·"],["(20–35 €)","(€20–35)"],["(10–15 €)","(€10–15)"],["Lingua","Language"],["Paese","Country"],["Altro paese","Other country"]
+];
+
+/* parole brevi tradotte solo se sono l'intero testo del nodo */
+const EN_EXACT=new Map([["Disco","Drive"]]);
+
+const REGIONS={
+ IT:{n:"Italia (€)",cur:"EUR",rate:1,loc:"it-IT",shops:[["Trovaprezzi","https://www.trovaprezzi.it/categoria.aspx?id=-1&libera="],["Amazon.it","https://www.amazon.it/s?k="]],used:["eBay","https://www.ebay.it/sch/i.html?_nkw="]},
+ US:{n:"United States ($)",cur:"USD",rate:1,loc:"en-US",shops:[["PCPartPicker","https://pcpartpicker.com/search/?q="],["Amazon","https://www.amazon.com/s?k="],["Newegg","https://www.newegg.com/p/pl?d="]],used:["eBay","https://www.ebay.com/sch/i.html?_nkw="]},
+ GB:{n:"United Kingdom (£)",cur:"GBP",rate:0.86,loc:"en-GB",shops:[["PCPartPicker UK","https://uk.pcpartpicker.com/search/?q="],["Amazon.co.uk","https://www.amazon.co.uk/s?k="]],used:["eBay","https://www.ebay.co.uk/sch/i.html?_nkw="]},
+ DE:{n:"Deutschland (€)",cur:"EUR",rate:1,loc:"de-DE",shops:[["idealo","https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q="],["Amazon.de","https://www.amazon.de/s?k="]],used:["eBay","https://www.ebay.de/sch/i.html?_nkw="]},
+ FR:{n:"France (€)",cur:"EUR",rate:1,loc:"fr-FR",shops:[["LeDénicheur","https://ledenicheur.fr/search?search="],["Amazon.fr","https://www.amazon.fr/s?k="]],used:["eBay","https://www.ebay.fr/sch/i.html?_nkw="]},
+ ES:{n:"España (€)",cur:"EUR",rate:1,loc:"es-ES",shops:[["PcComponentes","https://www.pccomponentes.com/buscar/?query="],["Amazon.es","https://www.amazon.es/s?k="]],used:["eBay","https://www.ebay.es/sch/i.html?_nkw="]},
+ INT:{n:"Altro paese ($)",cur:"USD",rate:1,loc:"en-US",shops:[["PCPartPicker","https://pcpartpicker.com/search/?q="],["Amazon","https://www.amazon.com/s?k="]],used:["eBay","https://www.ebay.com/sch/i.html?_nkw="]}
+};
+const prefGet=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+const prefSet=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
+const NAVL=String(navigator.language||"en").toLowerCase();
+let LANG=prefGet("rigscore.lang")||(NAVL.startsWith("it")?"it":"en");
+let REGION=prefGet("rigscore.region")||({it:"IT",de:"DE",fr:"FR",es:"ES"}[NAVL.slice(0,2)]||(NAVL==="en"||NAVL.endsWith("-us")?"US":NAVL.endsWith("-gb")?"GB":"INT"));
+if(!REGIONS[REGION]) REGION="INT";
+const REG=()=>REGIONS[REGION];
+const LOC=()=>LANG==="it"?"it-IT":(REG().loc.startsWith("en")?REG().loc:"en-GB");
+const EN_SORTED=EN_PAIRS.slice().sort((a,b)=>b[0].length-a[0].length);
+function trS(s){ if(LANG!=="en"||s==null) return s; let r=String(s); const k=r.trim(); if(EN_EXACT.has(k)) return r.replace(k,EN_EXACT.get(k)); for(const [a,b] of EN_SORTED){ if(r.includes(a)) r=r.split(a).join(b); } return r; }
+const NO_TR="code,textarea,script,style";
+function trDOM(root){
+  if(LANG!=="en"||!root) return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); const list=[]; let t; while((t=w.nextNode())) list.push(t);
+  if(root.nodeType===3) list.push(root);
+  for(const x of list){ const p=x.parentElement; if(!p||p.closest(NO_TR)) continue; const v=trS(x.nodeValue); if(v!==x.nodeValue) x.nodeValue=v; }
+  if(root.querySelectorAll){ const els=[...root.querySelectorAll("[placeholder],[aria-label]")]; if(root.hasAttribute&&(root.hasAttribute("placeholder")||root.hasAttribute("aria-label"))) els.push(root); els.forEach(el=>["placeholder","aria-label"].forEach(at=>{ if(el.hasAttribute(at)){ const v=trS(el.getAttribute(at)); if(v!==el.getAttribute(at)) el.setAttribute(at,v); } })); }
+}
+const MO=new MutationObserver(ms=>{ if(LANG!=="en") return; for(const m of ms) for(const nd of m.addedNodes){ if(nd.nodeType===1) trDOM(nd); else if(nd.nodeType===3&&nd.parentElement&&!nd.parentElement.closest(NO_TR)){ const v=trS(nd.nodeValue); if(v!==nd.nodeValue) nd.nodeValue=v; } } });
+function initPrefs(){
+  document.documentElement.lang=LANG;
+  const ls=document.getElementById("langSel"), rs=document.getElementById("regSel");
+  rs.innerHTML=Object.entries(REGIONS).map(([k,r])=>`<option value="${k}">${r.n}</option>`).join("");
+  ls.value=LANG; rs.value=REGION;
+  ls.addEventListener("change",()=>{ prefSet("rigscore.lang",ls.value); location.reload(); });
+  rs.addEventListener("change",()=>{ REGION=rs.value; prefSet("rigscore.region",REGION); if(typeof recompute==="function"&&P) recompute(); });
+  trDOM(document.body);
+  MO.observe(document.body,{childList:true,subtree:true});
+}
+
 /* ============ UTILITY ============ */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const fmtE=p=>"≈ "+p.toLocaleString("it-IT")+" €";
-const fmtD=d=>{ if(!d) return "—"; const x=new Date(d); return isNaN(x)?d:x.toLocaleDateString("it-IT",{month:"short",year:"numeric"}); };
+const fmtE=p=>"≈ "+new Intl.NumberFormat(LOC(),{style:"currency",currency:REG().cur,maximumFractionDigits:0}).format(Math.round(p*REG().rate/10)*10);
+const fmtD=d=>{ if(!d) return "—"; const x=new Date(d); return isNaN(x)?d:x.toLocaleDateString(LOC(),{month:"short",year:"numeric"}); };
 const yearsSince=d=>{ const x=new Date(d); return isNaN(x)?null:(Date.now()-x)/3.156e10; };
-function shop(q,used){ const e=encodeURIComponent(q); return `<a href="https://www.trovaprezzi.it/categoria.aspx?id=-1&libera=${e}" target="_blank" rel="noopener">Trovaprezzi</a><a href="https://www.amazon.it/s?k=${e}" target="_blank" rel="noopener">Amazon</a>${used?`<a href="https://www.ebay.it/sch/i.html?_nkw=${e}" target="_blank" rel="noopener">eBay (usato)</a>`:""}`; }
-function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2200); }
+function shop(q,used){ const e=encodeURIComponent(q), R=REG(); return R.shops.map(([n,u])=>`<a href="${u}${e}" target="_blank" rel="noopener">${n}</a>`).join("")+(used?`<a href="${R.used[1]}${e}" target="_blank" rel="noopener">${R.used[0]} (usato)</a>`:""); }
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=trS(t); document.body.appendChild(d); setTimeout(()=>d.remove(),2200); }
 async function copyText(t){ try{ await navigator.clipboard.writeText(t); return true; }catch(e){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(_){} ta.remove(); return ok; } }
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 const RAMTYPE={20:"DDR",21:"DDR2",24:"DDR3",26:"DDR4",27:"LPDDR",28:"LPDDR2",29:"LPDDR3",30:"LPDDR4",34:"DDR5",35:"LPDDR5"};
@@ -935,7 +1239,7 @@ function renderOver(){
   const top=buildSoft(a).filter(x=>x.sev==="crit"||x.sev==="rec").slice(0,3);
   let comps=[];
   // CPU
-  const bt=a.bench?`benchmark ${a.bench.pts.toLocaleString("it-IT")} punti${a.bench.ratio?` (${Math.round(a.bench.ratio*100)}% dell'atteso)`:""}`:"";
+  const bt=a.bench?`benchmark ${a.bench.pts.toLocaleString(LOC())} punti${a.bench.ratio?` (${Math.round(a.bench.ratio*100)}% dell'atteso)`:""}`:"";
   comps.push({k:"Processore",v:a.cpu.name||(a.cpu.fromBench?"Modello non leggibile dal browser: misurato col benchmark":"Modello non letto"),d:[a.cpu.cores?`${a.cpu.cores} core / ${a.cpu.threads} thread`:a.cpu.threads?`${a.cpu.threads} thread logici`:"",p.cpu?.mhz?`${(p.cpu.mhz/1000).toFixed(1)} GHz base`:"",a.cpu.info.plat?`socket ${a.cpu.info.plat}`:"",bt,!a.cpu.info.known&&a.cpu.name?"modello non in archivio, punteggio stimato":""].filter(Boolean).join(" · "),n:s.cpuN,kind:"cpu"});
   const g2=a.gpus.slice(1).map(g=>g.name).join(", ");
   comps.push({k:"Scheda video",v:a.gpu.name,d:[a.gpu.kind==="i"?"integrata":a.gpu.kind==="l"?"dedicata per portatile":"dedicata",a.gpu.vramGB?`${a.gpu.vramGB} GB VRAM`:"",a.gpu.rt?"ray tracing sì":"ray tracing no",a.gpu.note,g2?`anche: ${g2}`:"",a.gpu.known===false?"modello non in archivio":""].filter(Boolean).join(" · "),n:s.gpuN,kind:"gpu"});
@@ -944,7 +1248,7 @@ function renderOver(){
   const dl=(p.disks||[]).map(d=>{ const v=(p.vols||[]).filter(x=>(d.letters||[]).includes(x.l[0])).map(x=>`${x.l} ${x.free} GB liberi su ${x.gb}`).join(", "); return `${d.name} · ${d.media==="HDD"?"HDD":d.bus==="NVMe"?"SSD NVMe":d.media==="SSD"?"SSD "+(d.bus||""):d.media||"?"} · ${d.gb} GB${v?" · "+v:""}${d.health&&d.health!=="Healthy"?" · STATO: "+d.health:""}${d.wear!=null?` · usura ${d.wear}%`:""}`; });
   comps.push({k:"Archiviazione",v:a.sysType?`Disco di sistema: ${a.sysType==="NVMe"?"SSD NVMe":a.sysType==="SSD"?"SSD SATA":a.sysType==="HDD"?"Hard disk meccanico":a.sysType}`:"Da indicare",d:dl.join("<br>")||(p.diskEstGB?`Disco di sistema da circa ${p.diskEstGB} GB (stima dal browser). Il tipo di disco si legge solo con la scansione completa.`:"Il browser non può leggere i dischi"),n:s.stoN,raw:true});
   const os=a.osSt;
-  comps.push({k:"Sistema",v:`${a.os.name||"—"}${p.os?.disp&&!/ltsc/i.test(a.os.name||"")?" "+p.os.disp:""}`,d:[p.os?.build&&!p.os.fromBrowser?`build ${p.os.build}.${p.os.ubr||0}`:"",p.os?.arch||"",os.end?(os.over?`supporto terminato il ${os.end.toLocaleDateString("it-IT")}`:`supportato fino al ${os.end.toLocaleDateString("it-IT")}`):os.label,p.os?.installed?`installato ${fmtD(p.os.installed)}`:""].filter(Boolean).join(" · "),chip:os.over?`<span class="chip bad">Non supportato</span>`:os.soon?`<span class="chip warn">In scadenza</span>`:os.ok?`<span class="chip good">Supportato</span>`:`<span class="chip neutral">Da verificare</span>`});
+  comps.push({k:"Sistema",v:`${a.os.name||"—"}${p.os?.disp&&!/ltsc/i.test(a.os.name||"")?" "+p.os.disp:""}`,d:[p.os?.build&&!p.os.fromBrowser?`build ${p.os.build}.${p.os.ubr||0}`:"",p.os?.arch||"",os.end?(os.over?`supporto terminato il ${os.end.toLocaleDateString(LOC())}`:`supportato fino al ${os.end.toLocaleDateString(LOC())}`):os.label,p.os?.installed?`installato ${fmtD(p.os.installed)}`:""].filter(Boolean).join(" · "),chip:os.over?`<span class="chip bad">Non supportato</span>`:os.soon?`<span class="chip warn">In scadenza</span>`:os.ok?`<span class="chip good">Supportato</span>`:`<span class="chip neutral">Da verificare</span>`});
   if(p.sys?.board||p.sys?.model) comps.push({k:"Scheda madre",v:`${p.sys.maker||""} ${p.sys.model||""}`.trim(),d:[p.sys.board?`scheda ${p.sys.board}`:"",p.sys.bios?`BIOS ${p.sys.bios} (${fmtD(p.sys.biosDate)})`:"",p.sys.uefi?"UEFI":"BIOS legacy",p.sys.secureBoot?"Secure Boot attivo":"Secure Boot spento",a.tpm?`TPM ${a.tpm}`:p.sw&&!p.sw.admin?"TPM: serve PowerShell come amministratore":""].filter(Boolean).join(" · "),chip:p.sys.secureBoot===false?`<span class="chip warn">Secure Boot spento</span>`:""});
   const disp=p.display||{};
   if(disp.w) comps.push({k:"Schermo",v:`${disp.w} × ${disp.h}${disp.hz?" @ "+disp.hz+" Hz":""}`,d:[disp.mon?`monitor ${disp.mon}`:"",disp.hz&&disp.hz<=60?"60 Hz: un monitor a 144 Hz rende i giochi molto più fluidi":""].filter(Boolean).join(" · ")});
@@ -962,11 +1266,11 @@ function renderOver(){
       <div class="facts">
         <div class="fact"><span class="eyebrow">Giochi che girano</span><b>${playable}/${GAMES.length}</b></div>
         <div class="fact"><span class="eyebrow">Fluidi in 1080p</span><b>${fluid}/${GAMES.length}</b></div>
-        ${a.bench?`<div class="fact" style="grid-column:1/-1"><span class="eyebrow">Benchmark CPU misurato</span><b>${a.bench.pts.toLocaleString("it-IT")} pt</b></div>`:""}
+        ${a.bench?`<div class="fact" style="grid-column:1/-1"><span class="eyebrow">Benchmark CPU misurato</span><b>${a.bench.pts.toLocaleString(LOC())} pt</b></div>`:""}
       </div>
     </div>
     <div class="panel">
-      <div class="sec-head"><h2>Il tuo PC</h2><span class="muted small mono">${p.t?"rilevato "+new Date(p.t).toLocaleString("it-IT",{dateStyle:"short",timeStyle:"short"}):""}</span></div>
+      <div class="sec-head"><h2>Il tuo PC</h2><span class="muted small mono">${p.t?"rilevato "+new Date(p.t).toLocaleString(LOC(),{dateStyle:"short",timeStyle:"short"}):""}</span></div>
       <div>${comps.map(c=>`<div class="comp"><span class="k">${c.k}</span><div><div class="v">${esc(c.v)}</div>${c.d?`<div class="d">${c.raw?c.d.split("<br>").map(esc).join("<br>"):esc(c.d)}</div>`:""}${meter(c.n)}</div><div class="s">${c.chip!==undefined?c.chip:c.n!==undefined?chipFor(c.n,c.kind):""}</div></div>`).join("")}</div>
     </div>
   </div>
@@ -1023,9 +1327,9 @@ function buildSoft(a){
       const w11ok=(a.cpu.info.vendor==="intel"&&(a.cpu.info.gen||0)>=8)||(a.cpu.info.vendor==="amd"&&(a.cpu.info.gen||0)>=2);
       add({sev:"crit",area:"Sistema",title:`${os.label}: supporto terminato`,short:"Niente più aggiornamenti di sicurezza.",body:`<p>Il tuo Windows non riceve più patch di sicurezza${os.esu?" (anche il programma ESU per Windows 10 è terminato il 13 ottobre 2026)":""}. ${w11ok?"Il processore è compatibile con Windows 11: aggiorna da Impostazioni › Windows Update o con l'Assistente all'installazione di Windows 11.":"Il processore non è nella lista ufficiale di Windows 11. Alternative: Windows 11 IoT Enterprise LTSC 2024 (supportato fino al 2034, licenza aziendale) oppure una distribuzione Linux per giocare come Bazzite o Linux Mint con Steam/Proton (attenzione: i giochi con anti-cheat a livello kernel come Valorant, Fortnite e Battlefield non funzionano su Linux)."}</p>`});
     } else if(os.soon){
-      add({sev:"rec",area:"Sistema",title:`${os.label}: supporto in scadenza`,short:`Scade il ${os.end.toLocaleDateString("it-IT")}.`,body:`<p>Il supporto termina il ${os.end.toLocaleDateString("it-IT")}. Pianifica l'aggiornamento alla versione successiva da Windows Update.</p>`});
+      add({sev:"rec",area:"Sistema",title:`${os.label}: supporto in scadenza`,short:`Scade il ${os.end.toLocaleDateString(LOC())}.`,body:`<p>Il supporto termina il ${os.end.toLocaleDateString(LOC())}. Pianifica l'aggiornamento alla versione successiva da Windows Update.</p>`});
     } else if(os.ok){
-      add({sev:"ok",area:"Sistema",title:`${os.label}: supportato`,body:`<p>Supporto fino al ${os.end.toLocaleDateString("it-IT")}.${/ltsc/i.test(a.os.name||"")?" LTSC non ha Microsoft Store né app Xbox: i giochi di Game Pass per PC e alcuni titoli dello Store non si installano senza aggiungerli a mano.":""}</p>`});
+      add({sev:"ok",area:"Sistema",title:`${os.label}: supportato`,body:`<p>Supporto fino al ${os.end.toLocaleDateString(LOC())}.${/ltsc/i.test(a.os.name||"")?" LTSC non ha Microsoft Store né app Xbox: i giochi di Game Pass per PC e alcuni titoli dello Store non si installano senza aggiungerli a mano.":""}</p>`});
     }
   }
   // Driver GPU
@@ -1037,7 +1341,7 @@ function buildSoft(a){
     if(leg){
       add({sev:age>4&&/Intel/.test(leg)?"rec":"opt",area:"Driver",title:`Driver ${g.name}: GPU fuori supporto`,short:`Driver del ${fmtD(g.driverDate)}.`,body:`<p>Hai il driver del ${fmtD(g.driverDate)} (${esc(vtxt)}). Questa GPU (${leg}) non riceve più driver nuovi. ${/Intel/.test(leg)?"Il tuo driver è più vecchio dell'ultima versione legacy: scaricala dal sito Intel cercando il modello della GPU (sezione driver legacy) oppure tramite Windows Update › Aggiornamenti facoltativi.":isNv&&nvVer(g.driver)==="425.31"?"Hai già l'ultimo driver uscito per questa GPU: niente da fare.":"Installa l'ultima versione legacy dal sito del produttore."}</p>`});
     } else if(age>0.5){
-      add({sev:age>1?"rec":"opt",area:"Driver",title:`Aggiorna il driver di ${g.name}`,short:`Driver del ${fmtD(g.driverDate)}: i nuovi giochi richiedono driver recenti.`,body:`<p>Driver del ${fmtD(g.driverDate)} (${esc(vtxt)}). I driver recenti correggono crash e migliorano le prestazioni nei giochi nuovi, a volte del 5–15%.</p><p>${isNv?`Scarica l'<a href="https://www.nvidia.com/it-it/software/nvidia-app/" target="_blank" rel="noopener">app NVIDIA</a>.`:isAmd?`Scarica <a href="https://www.amd.com/it/support/download/drivers.html" target="_blank" rel="noopener">AMD Software: Adrenalin Edition</a>.`:`Usa l'<a href="https://www.intel.it/content/www/it/it/support/detect.html" target="_blank" rel="noopener">assistente driver Intel</a>.`} Per un'installazione pulita puoi usare DDU (Display Driver Uninstaller) in modalità provvisoria.</p>`});
+      add({sev:age>1?"rec":"opt",area:"Driver",title:`Aggiorna il driver di ${g.name}`,short:`Driver del ${fmtD(g.driverDate)}: i nuovi giochi richiedono driver recenti.`,body:`<p>Driver del ${fmtD(g.driverDate)} (${esc(vtxt)}). I driver recenti correggono crash e migliorano le prestazioni nei giochi nuovi, a volte del 5–15%.</p><p>${isNv?`Scarica l'<a href="https://www.nvidia.com/${LANG==="it"?"it-it":"en-us"}/software/nvidia-app/" target="_blank" rel="noopener">app NVIDIA</a>.`:isAmd?`Scarica <a href="https://www.amd.com/${LANG==="it"?"it":"en"}/support/download/drivers.html" target="_blank" rel="noopener">AMD Software: Adrenalin Edition</a>.`:`Usa l'<a href="https://www.intel.com/content/www/${LANG==="it"?"it/it":"us/en"}/support/detect.html" target="_blank" rel="noopener">assistente driver Intel</a>.`} Per un'installazione pulita puoi usare DDU (Display Driver Uninstaller) in modalità provvisoria.</p>`});
     } else add({sev:"ok",area:"Driver",title:`Driver ${g.name} aggiornato`,body:`<p>Driver del ${fmtD(g.driverDate)}.</p>`});
   });
   // GPU ibride portatili
@@ -1054,7 +1358,7 @@ function buildSoft(a){
   // Benchmark vs atteso
   if(a.bench?.ratio){
     const r=Math.round(a.bench.ratio*100);
-    if(r<70) add({sev:"rec",area:"Prestazioni",title:`La CPU rende il ${r}% del previsto`,short:"Possibile surriscaldamento, risparmio energetico o processi in background.",body:`<p>Il benchmark nel browser ha misurato ${a.bench.pts.toLocaleString("it-IT")} punti, mentre un ${esc(a.cpu.name)} dovrebbe farne circa ${a.bench.expected.toLocaleString("it-IT")}. Cause tipiche: ${a.isLap?"portatile a batteria (collegalo alla corrente), ":""}piano energetico a risparmio, ventole impolverate o pasta termica secca, programmi pesanti aperti. Chiudi il resto, ripeti la scansione rapida dalla scheda Scansione e, se il risultato resta basso, controlla le temperature con HWiNFO.</p><p class="note">Il benchmark gira nel browser: varia di circa ±10% tra Chrome, Edge e Firefox.</p>`});
+    if(r<70) add({sev:"rec",area:"Prestazioni",title:`La CPU rende il ${r}% del previsto`,short:"Possibile surriscaldamento, risparmio energetico o processi in background.",body:`<p>Il benchmark nel browser ha misurato ${a.bench.pts.toLocaleString(LOC())} punti, mentre un ${esc(a.cpu.name)} dovrebbe farne circa ${a.bench.expected.toLocaleString(LOC())}. Cause tipiche: ${a.isLap?"portatile a batteria (collegalo alla corrente), ":""}piano energetico a risparmio, ventole impolverate o pasta termica secca, programmi pesanti aperti. Chiudi il resto, ripeti la scansione rapida dalla scheda Scansione e, se il risultato resta basso, controlla le temperature con HWiNFO.</p><p class="note">Il benchmark gira nel browser: varia di circa ±10% tra Chrome, Edge e Firefox.</p>`});
     else add({sev:"ok",area:"Prestazioni",title:`CPU al ${r}% delle prestazioni attese`,body:"<p>Nessun segno di rallentamenti.</p>"});
   }
   // Modalità gioco
@@ -1217,7 +1521,7 @@ function renderUpg(){
   const prebuilt=/^(hp|hewlett|dell|lenovo|acer|asus|medion|fujitsu)/i.test(p.sys?.maker||"")&&!limited;
   $("#p-upg").innerHTML=`<div class="sec-head"><div class="stack" style="gap:6px"><h2>Upgrade hardware</h2><p class="muted small">${PRICE_NOTE}</p></div></div>
   <div class="panel stack"><div class="verdict"><p>${v}</p></div>
-   <dl class="kv"><dt>Tipo</dt><dd>${TYPE_L[a.type]}</dd>${brd?`<dt>Scheda madre</dt><dd>${esc(brd)}${chipset?" (chipset "+chipset+")":""}</dd>`:""}${pd?`<dt>Piattaforma</dt><dd>${esc(pd.label)} · RAM ${pd.ram}</dd>`:""}<dt>Limite CPU per la GPU</dt><dd>${limited?"—":"fino a indice "+Math.round(cap).toLocaleString("it-IT")+" (circa "+(GPUS.filter(g=>g.kind==="d").sort((x,y)=>Math.abs(x.s-cap)-Math.abs(y.s-cap))[0].n)+")"}</dd></dl>
+   <dl class="kv"><dt>Tipo</dt><dd>${TYPE_L[a.type]}</dd>${brd?`<dt>Scheda madre</dt><dd>${esc(brd)}${chipset?" (chipset "+chipset+")":""}</dd>`:""}${pd?`<dt>Piattaforma</dt><dd>${esc(pd.label)} · RAM ${pd.ram}</dd>`:""}<dt>Limite CPU per la GPU</dt><dd>${limited?"—":"fino a indice "+Math.round(cap).toLocaleString(LOC())+" (circa "+(GPUS.filter(g=>g.kind==="d").sort((x,y)=>Math.abs(x.s-cap)-Math.abs(y.s-cap))[0].n)+")"}</dd></dl>
    ${pd?.note?`<p class="note">${esc(pd.note)}</p>`:""}${prebuilt?`<p class="note">PC di marca (${esc(p.sys.maker)}): spesso hanno alimentatore poco potente con connettori proprietari e case piccoli. Prima di comprare una GPU controlla la potenza sull'etichetta dell'alimentatore e lo spazio disponibile.</p>`:""}</div>
   ${blk("Archiviazione",limited?"Sui portatili verifica prima che slot c'è (M.2 2280, 2242, 2230 o vano 2,5\") nel manuale di servizio.":"",sto2)}
   ${blk("Memoria RAM","",ram)}
@@ -1235,8 +1539,8 @@ function renderScan(){
   const a=A;
   $("#p-scan").innerHTML=`<div class="sec-head"><div class="stack" style="gap:6px"><h2>Scansione</h2><p class="muted small">Per sicurezza nessun sito può leggere modello della CPU, tipo e velocità della RAM, dischi e scheda madre. Lo fa un piccolo script PowerShell che <b>legge soltanto</b>: non installa e non modifica niente. Alla fine apre RigScore con i risultati nel link: i dati vengono elaborati solo nel tuo browser e non vengono inviati a nessun server.</p></div></div>
   <div class="panel stack"><h3>Cosa ho rilevato finora</h3><dl class="kv">
-   <dt>Fonte</dt><dd>${a.p.source==="scan"?"scansione completa del "+new Date(a.p.t).toLocaleString("it-IT",{dateStyle:"short",timeStyle:"short"}):"browser (scansione rapida)"}</dd>
-   <dt>Processore</dt><dd>${esc(a.cpu.name||(a.bench?"modello sconosciuto, benchmark "+a.bench.pts.toLocaleString("it-IT")+" pt":"—"))}</dd>
+   <dt>Fonte</dt><dd>${a.p.source==="scan"?"scansione completa del "+new Date(a.p.t).toLocaleString(LOC(),{dateStyle:"short",timeStyle:"short"}):"browser (scansione rapida)"}</dd>
+   <dt>Processore</dt><dd>${esc(a.cpu.name||(a.bench?"modello sconosciuto, benchmark "+a.bench.pts.toLocaleString(LOC())+" pt":"—"))}</dd>
    <dt>Scheda video</dt><dd>${esc(a.gpu.name)}</dd>
    <dt>RAM</dt><dd>${a.ram.gb?(a.ram.approx?"≈ ":"")+a.ram.gb+" GB"+(a.ram.type?" "+a.ram.type:""):"—"}</dd>
    <dt>Disco</dt><dd>${a.sysType?a.sysType:(a.p.diskEstGB?"≈ "+a.p.diskEstGB+" GB, tipo sconosciuto":"—")}</dd>
@@ -1291,7 +1595,7 @@ document.addEventListener("click",async e=>{
   if(t.dataset.copy!==undefined){ const ok=await copyText(t.dataset.copy); toast(ok?"Comando copiato":"Copia non riuscita: seleziona il testo a mano"); return; }
   if(t.dataset.res!==undefined){ UI.res=+t.dataset.res; renderGames(); return; }
   if(t.dataset.only){ UI.only=t.dataset.only; renderGames(); return; }
-  if(t.id==="scanGo"){ const msg=$("#scanMsg"); try{ await importText($("#scanIn").value); }catch(err){ msg.textContent=err.message.startsWith("Il testo")?err.message:"Codice incompleto o danneggiato: ricopialo dal PowerShell per intero."; msg.style.color="var(--bad)"; } return; }
+  if(t.id==="scanGo"){ const msg=$("#scanMsg"); try{ await importText($("#scanIn").value); }catch(err){ msg.textContent=trS(err.message.startsWith("Il testo")?err.message:"Codice incompleto o danneggiato: ricopialo dal PowerShell per intero."); msg.style.color="var(--bad)"; } return; }
   if(t.id==="ovApply"){ OV={type:$("#ovType").value,cpu:$("#ovCpu").value.trim(),gpu:$("#ovGpu").value.trim(),ram:$("#ovRam").value,disk:$("#ovDisk").value,os:$("#ovOs").value}; Object.keys(OV).forEach(k=>{if(!OV[k]||OV[k]==="auto") delete OV[k]}); store.set("rigscore.ov",OV); recompute(); toast("Correzioni applicate"); return; }
   if(t.id==="ovReset"){ OV={}; store.del("rigscore.ov"); recompute(); toast("Correzioni rimosse"); return; }
   if(t.id==="rescan"){ store.del("rigscore.profile"); toast("Benchmark in corso…"); await new Promise(r=>setTimeout(r,50)); BENCH=cpuBench(300); P=await browserScan(); recompute(); toast("Scansione rapida aggiornata"); return; }
@@ -1316,6 +1620,7 @@ document.addEventListener("click",e=>{ if(e.target.closest("#runScan")){ const w
 window.addEventListener("storage",e=>{ if(e.key==="rigscore.profile"&&e.newValue){ try{ P=JSON.parse(e.newValue); recompute(); const w=$("#waitBar"); if(w) w.hidden=true; toast("Scansione completa caricata"); }catch(_){} } });
 window.addEventListener("hashchange",async()=>{ if(await importHash()){ recompute(); setTab("over"); toast("Scansione completa caricata"); } });
 (async function start(){
+  initPrefs();
   const fromLink=await importHash();
   const saved=store.get("rigscore.profile");
   if(!fromLink) P=saved&&saved.source==="scan"?saved:await browserScan();
