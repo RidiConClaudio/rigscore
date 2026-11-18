@@ -1,6 +1,6 @@
 # RigScore
 
-**Scan your Windows PC, see how 40 popular games will run on it, and get concrete software tweaks and hardware upgrade advice with prices.**
+**Scan your Windows PC, see how 78 popular games will run on it, and get concrete software tweaks and hardware upgrade advice with prices.**
 
 🌐 **Live site:** https://ridiconclaudio.github.io/rigscore/ — English and Italian, with currency and shops for Italy, US, UK, Germany, France, Spain and other countries.
 
