@@ -30,10 +30,10 @@ After 10–30 seconds RigScore opens with your results.
 irm https://ridiconclaudio.github.io/rigscore/install.ps1 | iex
 ```
 
-No admin rights are needed. The installer saves the script to `%LOCALAPPDATA%\RigScore`, registers a `rigscore://` link and creates a Desktop shortcut. To remove it:
+No admin rights are needed. The installer saves the script to `%LOCALAPPDATA%\you_are_incredible\RigScore`, registers a `rigscore://` link and creates a Desktop shortcut. To remove it:
 
 ```powershell
-Remove-Item 'HKCU:\Software\Classes\rigscore' -Recurse; Remove-Item "$env:LOCALAPPDATA\RigScore" -Recurse; Remove-Item "$([Environment]::GetFolderPath('Desktop'))\RigScore.lnk"
+Remove-Item 'HKCU:\Software\Classes\rigscore' -Recurse; Remove-Item "$env:LOCALAPPDATA\you_are_incredible\RigScore" -Recurse; Remove-Item "$([Environment]::GetFolderPath('Desktop'))\RigScore.lnk"
 ```
 
 ## Privacy and safety

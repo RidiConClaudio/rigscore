@@ -1,6 +1,7 @@
 & {
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072
-$d = Join-Path $env:LOCALAPPDATA 'RigScore'
+$d = Join-Path $env:LOCALAPPDATA 'you_are_incredible\RigScore'
+$o = Join-Path $env:LOCALAPPDATA 'RigScore'; if (Test-Path $o) { Remove-Item $o -Recurse -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $d | Out-Null
 $f = Join-Path $d 'scan.ps1'
 Invoke-WebRequest -UseBasicParsing -Uri 'https://ridiconclaudio.github.io/rigscore/scan.ps1' -OutFile $f

@@ -312,7 +312,8 @@ Start-Sleep -Seconds 6
 }</script>
 <script type="text/plain" id="inst-src">& {
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072
-$d = Join-Path $env:LOCALAPPDATA 'RigScore'
+$d = Join-Path $env:LOCALAPPDATA 'you_are_incredible\RigScore'
+$o = Join-Path $env:LOCALAPPDATA 'RigScore'; if (Test-Path $o) { Remove-Item $o -Recurse -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $d | Out-Null
 $f = Join-Path $d 'scan.ps1'
 Invoke-WebRequest -UseBasicParsing -Uri 'https://ridiconclaudio.github.io/rigscore/scan.ps1' -OutFile $f
@@ -1953,7 +1954,7 @@ function renderScan(){
    <div><h3>Scansione con un clic</h3><p class="small muted">Per sicurezza una pagina web non può aprire PowerShell da sola. Il pulsante usa un link <span class="mono">rigscore://</span> registrato sul tuo PC, come fanno i link <span class="mono">steam://</span> o <span class="mono">discord://</span>.</p></div>
    <div class="steps">
     <div class="step"><span class="num">OGNI VOLTA</span><h3>Avvia la scansione</h3><a class="btn primary" id="runScan" href="rigscore://scan" target="_blank" rel="noopener" style="align-self:start;text-decoration:none">Avvia scansione</a><p class="note">Il browser chiede “Aprire RigScore?”: conferma (e spunta “Consenti sempre”). PowerShell legge le specifiche e apre RigScore con i risultati. Puoi anche usare l'icona <b>RigScore</b> sul Desktop.</p></div>
-    <div class="step"><span class="num">SOLO LA PRIMA VOLTA</span><h3>Installa il pulsante</h3>${cmdBlock(INST_CMD)}<p class="note">Incolla questa riga in PowerShell (<kbd>Win</kbd>+<kbd>X</kbd> › Windows PowerShell) e premi <kbd>Invio</kbd>. Non servono permessi di amministratore: salva lo script in <span class="mono">%LOCALAPPDATA%\\RigScore</span>, registra il link, crea l'icona sul Desktop e fa subito la prima scansione.</p><details><summary class="small">Per rimuoverlo</summary>${cmdBlock("Remove-Item 'HKCU:\\Software\\Classes\\rigscore' -Recurse; Remove-Item \"$env:LOCALAPPDATA\\RigScore\" -Recurse; Remove-Item \"$([Environment]::GetFolderPath('Desktop'))\\RigScore.lnk\"")}</details></div>
+    <div class="step"><span class="num">SOLO LA PRIMA VOLTA</span><h3>Installa il pulsante</h3>${cmdBlock(INST_CMD)}<p class="note">Incolla questa riga in PowerShell (<kbd>Win</kbd>+<kbd>X</kbd> › Windows PowerShell) e premi <kbd>Invio</kbd>. Non servono permessi di amministratore: salva lo script in <span class="mono">%LOCALAPPDATA%\\you_are_incredible\\RigScore</span>, registra il link, crea l'icona sul Desktop e fa subito la prima scansione.</p><details><summary class="small">Per rimuoverlo</summary>${cmdBlock("Remove-Item 'HKCU:\\Software\\Classes\\rigscore' -Recurse; Remove-Item \"$env:LOCALAPPDATA\\you_are_incredible\\RigScore\" -Recurse; Remove-Item \"$([Environment]::GetFolderPath('Desktop'))\\RigScore.lnk\"")}</details></div>
    </div>
   </div>
   <div class="panel stack">
