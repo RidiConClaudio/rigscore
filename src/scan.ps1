@@ -33,11 +33,11 @@ $o.os = [ordered]@{
 }
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
 $o.cpu = [ordered]@{ name = S $cpu.Name; cores = $cpu.NumberOfCores; threads = $cpu.NumberOfLogicalProcessors; mhz = $cpu.MaxClockSpeed; socket = S $cpu.SocketDesignation; l3KB = $cpu.L3CacheSize; virt = $cpu.VirtualizationFirmwareEnabled }
-$reg = Get-ChildItem 'HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_.DriverDesc }
-$o.gpu = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Remote|Virtual|Basic Display|Mirage|Parsec|Indirect' } | ForEach-Object {
-  $n = S $_.Name; $r = $reg | Where-Object { $_.DriverDesc -eq $n } | Select-Object -First 1
+$reg = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_.DriverDesc }
+$o.gpu = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name -notmatch 'Remote|Virtual|Basic Display|Mirage|Parsec|Indirect|IddSample|SpaceDesk|Citrix|Oray|LuminonCore|Meta Virtual|USB Display' } | ForEach-Object {
+  $n = S $_.Name; $r = $reg | Where-Object { (S $_.DriverDesc) -eq $n } | Select-Object -First 1
   $vram = $r.'HardwareInformation.qwMemorySize'
-  if (-not $vram) { $m = $r.'HardwareInformation.MemorySize'; if ($m -is [byte[]]) { $vram = [BitConverter]::ToUInt32($m, 0) } elseif ($m) { $vram = $m } }
+  if (-not $vram) { $m = $r.'HardwareInformation.MemorySize'; if ($m -is [byte[]] -and $m.Length -ge 4) { $vram = if ($m.Length -ge 8) { [BitConverter]::ToUInt64($m, 0) } else { [BitConverter]::ToUInt32($m, 0) } } elseif ($m) { $vram = $m } }
   if (-not $vram) { $vram = $_.AdapterRAM }
   [ordered]@{ name = $n; vramMB = [math]::Round([double]$vram / 1MB); driver = S $_.DriverVersion; driverDate = $(if ($_.DriverDate) { $_.DriverDate.ToString('yyyy-MM-dd') }); w = $_.CurrentHorizontalResolution; h = $_.CurrentVerticalResolution; hz = $_.CurrentRefreshRate; maxHz = $_.MaxRefreshRate }
 })
@@ -46,8 +46,9 @@ $o.mon = @(Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 })
 $arr = Get-CimInstance Win32_PhysicalMemoryArray | Where-Object { $_.Use -eq 3 }
 $sticks = @(Get-CimInstance Win32_PhysicalMemory | Where-Object { $_.Capacity -gt 0 } | ForEach-Object { [ordered]@{ gb = [math]::Round($_.Capacity / 1GB); speed = $_.Speed; cfg = $_.ConfiguredClockSpeed; type = $_.SMBIOSMemoryType; mtype = $_.MemoryType; ff = $_.FormFactor; maker = S $_.Manufacturer; part = S $_.PartNumber; slot = S $_.DeviceLocator; volt = $_.ConfiguredVoltage } })
+$maxKB = ($arr | ForEach-Object { if ($_.MaxCapacityEx -gt 0) { $_.MaxCapacityEx } else { $_.MaxCapacity } } | Measure-Object -Sum).Sum
 $o.ram = [ordered]@{
-  slots = ($arr | Measure-Object MemoryDevices -Sum).Sum; maxGB = [math]::Round((($arr | Measure-Object MaxCapacityEx -Sum).Sum) / 1MB)
+  slots = ($arr | Measure-Object MemoryDevices -Sum).Sum; maxGB = [math]::Round($maxKB / 1MB)
   totalGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1); sumGB = ($sticks | ForEach-Object { $_.gb } | Measure-Object -Sum).Sum
   sticks = $sticks
 }

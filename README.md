@@ -14,15 +14,13 @@
 
 ## How to use it
 
-Open the site: the browser alone detects the graphics card, threads, approximate RAM and runs a quick CPU benchmark.
-
-For the full analysis (CPU model, RAM type/speed/slots, drives, motherboard, Windows edition and settings), run **one line in PowerShell** (`Win`+`X` → Windows PowerShell):
+RigScore skips inaccurate browser-side hardware guesses and reads your real PC specs directly from Windows using **one read-only line in PowerShell** (`Win`+`X` → Terminal / Windows PowerShell):
 
 ```powershell
 irm https://ridiconclaudio.github.io/rigscore/scan.ps1 | iex
 ```
 
-After 10–30 seconds RigScore opens with your results.
+After 10–30 seconds RigScore opens automatically with your full results (CPU model, GPU & VRAM, RAM type/speed/slots, drives, motherboard, BIOS, Windows edition and settings). You can also enter or simulate a PC configuration manually on the Scan page.
 
 **One-click option:** install it once and from then on use the *Start scan* button on the site or the RigScore icon on your Desktop:
 
