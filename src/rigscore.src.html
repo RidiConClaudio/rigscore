@@ -1319,7 +1319,12 @@ function renderGames(){
 
 /* ============ OTTIMIZZAZIONI SOFTWARE ============ */
 const BLOAT_APPX=/BingNews|BingWeather|BingSearch|GetHelp|Getstarted|MicrosoftSolitaire|\.People|SkypeApp|ZuneMusic|ZuneVideo|YourPhone|Clipchamp|MicrosoftTeams|MSTeams|Todos|Disney|Spotify|TikTok|CandyCrush|king\.com|Facebook|Instagram|LinkedIn|MicrosoftOfficeHub|OutlookForWindows|Copilot|549981C3F5F10|PowerAutomate|WindowsFeedbackHub|Microsoft3DViewer|MixedReality|Wallet|WindowsMaps|Microsoft\.News|Messaging|OneConnect|Print3D|DevHome|Family|QuickAssist/i;
-const HEAVY_START=/Adobe|Autodesk|Creative ?Cloud|CCX|OneDrive|Teams|Spotify|Discord|Epic|EADM|EA ?app|Origin|Ubisoft|Battle\.net|Ollama|Docker|EdgeAutoLaunch|Opera|Skype|Zoom|Dropbox|Google ?Drive|iCloud|Razer|Corsair|iCUE|Logi|Wallpaper|Roblox|AnyDesk|Parsec|Tailscale|WhatsApp|Telegram|uTorrent|qBittorrent/i;
+const HEAVY_START=/Adobe|Acrobat|Autodesk|Creative ?Cloud|CCX|OneDrive|Teams|Spotify|Discord|Steam|Epic|EADM|EA ?app|Origin|Ubisoft|Battle\.net|Galaxy|GOG|Overwolf|Medal|CurseForge|BlueStacks|Omniverse|LM ?Studio|Ollama|Docker|EdgeAutoLaunch|ChromeAutoLaunch|Opera|Skype|Zoom|Dropbox|Google ?Drive|GoogleDriveFS|MEGAsync|iCloud|Roblox|WhatsApp|Telegram|uTorrent|qBittorrent|Updat|Error ?Report|RunOnStartup|PDFgear|Last\.fm/i;
+const SPACE_HOG=[[/Ollama/i,"Ollama: modelli in %USERPROFILE%\\.ollama\\models (variabile OLLAMA_MODELS per spostarli)"],[/LM ?Studio/i,"LM Studio: modelli in %USERPROFILE%\\.lmstudio\\models (cartella modificabile in My Models)"],[/Steam/i,"Steam: Impostazioni › Archiviazione › sposta i giochi su un'altra libreria"],[/Epic/i,"Epic Games: giochi in C:\\Program Files\\Epic Games"],[/BlueStacks/i,"BlueStacks: istanze Android in C:\\ProgramData\\BlueStacks_nxt"],[/Omniverse/i,"NVIDIA Omniverse: cache e librerie"],[/Galaxy|GOG/i,"GOG Galaxy: giochi in C:\\Program Files (x86)\\GOG Galaxy\\Games"],[/Creative ?Cloud|CCX/i,"Adobe Creative Cloud: cache dei programmi Adobe"]];
+const KEEP_APPX=/ZuneMusic|ZuneVideo|YourPhone|Spotify|Todos|MicrosoftTeams|MSTeams|OutlookForWindows|Family|QuickAssist|Messaging|WindowsMaps|Clipchamp|Disney|Copilot|MicrosoftSolitaire/i;
+const APPX_L={ZuneMusic:"Lettore multimediale",ZuneVideo:"Film e TV",YourPhone:"Collegamento al telefono",Todos:"To Do",OutlookForWindows:"Outlook",WindowsMaps:"Mappe",QuickAssist:"Assistenza rapida",MicrosoftSolitaire:"Solitaire"};
+const appxL=x=>{ const k=Object.keys(APPX_L).find(k=>x.includes(k)); return k?`${APPX_L[k]} (${x})`:x; };
+const KEEP_W32=/Bonjour/i;
 function legacyGPU(g){ const n=norm(g.name); if(/^(gt|gtx) [67]\d\d m?$/.test(n.replace(/ m$/,"m"))||/\b(gt|gtx) [67]\d\dm\b/.test(n)) return "Kepler"; if(/hd graphics (4000|4400|4600|5000|5500|6000|2500|3000)/.test(n)||/iris pro/.test(n)) return "Intel legacy"; if(/\br[579] \d{3}\b|hd \d{4}/.test(n)) return "AMD legacy"; return null; }
 function nvVer(v){ const p=String(v||"").split("."); if(p.length<4) return null; const s=(p[2].slice(-1)+p[3]).padStart(5,"0"); return (+s.slice(0,3))+"."+s.slice(3); }
 function buildSoft(a){
@@ -1379,10 +1384,13 @@ function buildSoft(a){
   const su=(sw.startup||[]).map(x=>x.replace(/_[0-9A-F]{16,}$/i,"").replace(/-[0-9A-F]{12,}$/i,"").trim()).filter(x=>!/^SecurityHealth$|^RtkAudUService|^Windows/i.test(x));
   if(su.length){
     const heavy=su.filter(x=>HEAVY_START.test(x));
-    add({sev:su.length>=10?"rec":su.length>=6?"opt":"ok",area:"Pulizia",title:`${su.length} programmi partono all'avvio`,short:heavy.length?`Da valutare: ${heavy.slice(0,4).join(", ")}${heavy.length>4?"…":""}.`:"",body:`<p>Ognuno occupa RAM e CPU in background. Disattiva quelli che non ti servono subito: <kbd>Ctrl</kbd>+<kbd>Maiusc</kbd>+<kbd>Esc</kbd> › Avvio (Windows 10) o App di avvio (Windows 11) › Disabilita.</p><p class="small">${su.map(x=>HEAVY_START.test(x)?`<b>${esc(x)}</b>`:esc(x)).join(" · ")}</p><p class="note">In grassetto quelli che di solito si possono disattivare senza problemi.</p>`});
+    add({sev:su.length>=10?"rec":su.length>=6?"opt":"ok",area:"Pulizia",title:`${su.length} programmi partono all'avvio`,short:heavy.length?`Da valutare: ${heavy.slice(0,4).join(", ")}${heavy.length>4?"…":""}.`:"",body:`<p>Ognuno occupa RAM e CPU in background. Disattiva quelli che non ti servono subito: <kbd>Ctrl</kbd>+<kbd>Maiusc</kbd>+<kbd>Esc</kbd> › Avvio (Windows 10) o App di avvio (Windows 11) › Disabilita.</p>${heavy.length?`<p class="small"><b>Di solito si possono disattivare senza problemi:</b> ${heavy.map(esc).join(" · ")}</p>`:""}${su.length>heavy.length?`<p class="small"><b>Gli altri: valuta tu.</b> Lascia attivi antivirus, driver audio, periferiche e VPN che usi. ${su.filter(x=>!HEAVY_START.test(x)).map(esc).join(" · ")}</p>`:""}<p class="note">Disattivarli non li disinstalla: partono quando li apri tu. Alcuni (Steam, Discord) hanno anche un'opzione “avvia con Windows” nelle loro impostazioni: spegnila lì, altrimenti si riattivano.</p>`});
   }
   // Bloatware
-  const bx=(sw.appx||[]).filter(x=>BLOAT_APPX.test(x)), bw=sw.bloat||[];
+  const bx=[...new Set((sw.appx||[]).filter(x=>BLOAT_APPX.test(x)))], bw=[...new Set(sw.bloat||[])];
+  const bxSure=bx.filter(x=>!KEEP_APPX.test(x)), bxKeep=bx.filter(x=>KEEP_APPX.test(x));
+  const bwSure=bw.filter(x=>!KEEP_W32.test(x)), bwKeep=bw.filter(x=>KEEP_W32.test(x));
+  const appxCmd=l=>`${l.map(x=>`'${x}'`).join(",")} | ForEach-Object { Get-AppxPackage $_ } | Remove-AppxPackage`;
   const ltsc=/ltsc/i.test(a.os.name||"");
   const tools=sw.tools||[];
   if(full){
@@ -1390,18 +1398,25 @@ function buildSoft(a){
     const tl=tools.filter(t=>/Winhance|WinUtil|ShutUp|Debloat|Atlas|ReviOS/i.test(t));
     add({sev:found.length>=3&&!ltsc?"rec":"opt",area:"Pulizia",title:found.length?`Rimuovi app superflue (${found.length} trovate)`:"Debloat di Windows",short:ltsc?"LTSC è già snello: basta un ritocco a telemetria e servizi.":found.length?`Trovate: ${found.slice(0,4).map(x=>x.replace(/^Microsoft\./,"")).join(", ")}.`:"Nessuna app inutile evidente.",
       body:`${tl.length?`<p>Hai già usato <b>${esc(tl.join(", "))}</b>: riaprilo dopo i grandi aggiornamenti di Windows, che a volte reinstallano le app rimosse.</p>`:""}
-      ${found.length?`<p>Trovate: ${found.map(esc).join(" · ")}</p>`:""}
+      ${bxSure.length?`<p><b>App da rimuovere:</b> ${bxSure.map(esc).join(" · ")}. Le rimuove il comando “Get-AppxPackage” qui sotto.</p>`:""}
+      ${bxKeep.length?`<p><b>Rimuovile solo se non le usi:</b> ${bxKeep.map(x=>esc(appxL(x))).join(" · ")}. Per queste c'è un comando a parte, l'ultimo.</p>`:""}
+      ${bwSure.length?`<p><b>Programmi da disinstallare</b> da Impostazioni › App › App installate: ${bwSure.map(esc).join(" · ")}.</p>`:""}
+      ${bwKeep.length?`<p><b>Bonjour</b> serve solo per iTunes, dispositivi Apple e alcune stampanti di rete: se non li usi, disinstallalo da Impostazioni › App.</p>`:""}
       <p>${ltsc?"La tua edizione LTSC non ha Store, Copilot, app preinstallate e pubblicità: un debloat aggressivo serve a poco. Puoi comunque ridurre telemetria e servizi in background.":"Strumenti affidabili e open source, da avviare in PowerShell come amministratore:"}</p>
       <ul><li><b>WinUtil</b> di Chris Titus: debloat, impostazioni consigliate e installazione programmi.</li><li><b>Win11Debloat</b> di Raphire: rimuove app, pubblicità, Copilot e suggerimenti (funziona anche su Windows 10).</li><li><b>O&amp;O ShutUp10++</b>: interruttori per privacy e telemetria, con interfaccia grafica.</li></ul>
       <p class="note">Prima crea un punto di ripristino (primo comando). Evita gli “ottimizzatori” a pagamento tipo IObit o CCleaner: non migliorano gli FPS.</p>`,
-      cmds:["Checkpoint-Computer -Description \"Prima del debloat\" -RestorePointType MODIFY_SETTINGS","irm \"https://christitus.com/win\" | iex","& ([scriptblock]::Create((irm \"https://debloat.raphi.re/\")))"].concat(bx.slice(0,6).map(x=>`Get-AppxPackage *${x.replace(/^Microsoft\./,"").split(".")[0]}* | Remove-AppxPackage`))});
+      cmds:["Enable-ComputerRestore -Drive \"C:\\\"; Checkpoint-Computer -Description \"Prima del debloat\" -RestorePointType MODIFY_SETTINGS","irm \"https://christitus.com/win\" | iex","& ([scriptblock]::Create((irm \"https://debloat.raphi.re/\")))"].concat(bxSure.length?[appxCmd(bxSure)]:[],bw.length?["start ms-settings:appsfeatures"]:[],bxKeep.length?[appxCmd(bxKeep)]:[])});
   }
   // Antivirus doppi
   const av=(sw.av||[]).filter(x=>!/defender/i.test(x));
   if(av.length) add({sev:"rec",area:"Pulizia",title:`Antivirus di terze parti: ${av.join(", ")}`,short:"Defender basta: un secondo antivirus rallenta avvio e giochi.",body:`<p>Microsoft Defender è integrato e sufficiente per l'uso domestico. ${esc(av.join(", "))} aggiunge scansioni in background e popup. Se è una prova preinstallata, disinstallala con lo strumento di rimozione del produttore.</p>`});
   // Disco
   const c=a.cVol;
-  if(c){ const fr=c.free/c.gb; if(fr<0.1) add({sev:"crit",area:"Pulizia",title:`Disco C: quasi pieno (${c.free} GB liberi)`,short:"Sotto il 10% Windows e i giochi rallentano.",body:"<p>Libera spazio: Impostazioni › Sistema › Archiviazione › File temporanei, oppure Pulizia disco. Per trovare le cartelle più pesanti usa WizTree o WinDirStat.</p>",cmd:"cleanmgr /d C"}); else if(fr<0.2) add({sev:"opt",area:"Pulizia",title:`Spazio su C: ${c.free} GB liberi su ${c.gb}`,short:"Meno del 20% libero.",body:"<p>Tieni almeno il 15–20% libero per aggiornamenti e cache dei giochi.</p>",cmd:"cleanmgr /d C"}); }
+  if(c){ const fr=c.free/c.gb;
+    const other=(p.vols||[]).filter(v=>v.l!=="C:"&&v.free>=30).sort((x,y)=>y.free-x.free)[0];
+    const hogs=SPACE_HOG.filter(([re])=>(sw.startup||[]).concat(sw.appx||[]).some(x=>re.test(x))).map(h=>h[1]);
+    const diskTips=`${other?`<p>Spazio libero su <b>${esc(other.l)}</b> ${other.free} GB. Sposta lì giochi e cartelle grandi invece di cancellarli.</p>`:""}${hogs.length?`<p>Sul tuo PC ci sono programmi che di solito occupano molto spazio:</p><ul>${hogs.map(h=>`<li>${esc(h)}</li>`).join("")}</ul>`:""}`;
+    if(fr<0.1) add({sev:"crit",area:"Pulizia",title:`Disco C: quasi pieno (${c.free} GB liberi)`,short:"Sotto il 10% Windows e i giochi rallentano.",body:"<p>Libera spazio: Impostazioni › Sistema › Archiviazione › File temporanei, oppure Pulizia disco. Per trovare le cartelle più pesanti usa WizTree o WinDirStat.</p>"+diskTips,cmd:"cleanmgr /d C"}); else if(fr<0.2) add({sev:"opt",area:"Pulizia",title:`Spazio su C: ${c.free} GB liberi su ${c.gb}`,short:"Meno del 20% libero.",body:"<p>Tieni almeno il 15–20% libero per aggiornamenti e cache dei giochi.</p>"+diskTips,cmd:"cleanmgr /d C"}); }
   if(a.sysType==="HDD") add({sev:"crit",area:"Hardware",title:"Windows è su un hard disk meccanico",short:"È il collo di bottiglia più grande: avvio e caricamenti lentissimi.",body:"<p>Un SSD costa poco e rende il PC 5–10 volte più reattivo. Vedi la sezione Upgrade. Intanto deframmenta il disco una volta al mese.</p>",cmd:"defrag C: /O"});
   else if(full&&(a.sysType==="SSD"||a.sysType==="NVMe")) add({sev:"opt",area:"Manutenzione",title:"Esegui il TRIM dell'SSD",short:"",body:"<p>Windows lo fa da solo ogni settimana; lanciarlo a mano non fa danni e conferma che funziona.</p>",cmd:"Optimize-Volume -DriveLetter C -ReTrim -Verbose"});
   (p.disks||[]).forEach(d=>{ if(d.health&&d.health!=="Healthy") add({sev:"crit",area:"Hardware",title:`Disco ${d.name}: stato ${d.health}`,short:"Fai subito un backup.",body:"<p>Windows segnala un problema sul disco. Fai il backup dei dati e controlla con CrystalDiskInfo.</p>"}); });
